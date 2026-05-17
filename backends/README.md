@@ -28,49 +28,49 @@
 <td><a href="https://go.dev/"><b>Go</b></a> + <a href="https://gin-gonic.com/"><b>Gin</b></a></td>
 <td><a href="./go-gin/"><code>go-gin/</code></a></td>
 <td><a href="./go-gin/README.md">README.md</a></td>
-<td align="center">✅ 完了</td>
+<td align="center">🚧 開発中</td>
 </tr>
 <tr>
 <td align="center"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/java/java-original.svg" width="32" height="32" alt="Kotlin"></td>
 <td><a href="https://kotlinlang.org/"><b>Java</b></a> + <a href="https://ktor.io/"><b>Spring Boot</b></a></td>
 <td><a href="./java-spring/"><code>java-spring/</code></a></td>
 <td><a href="./java-spring/README.md">README.md</a></td>
-<td align="center">✅ 完了</td>
+<td align="center">🚧 開発中</td>
 </tr>
 <tr>
 <td align="center"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/php/php-original.svg" width="32" height="32" alt="PHP"></td>
 <td><a href="https://www.php.net/"><b>PHP</b></a> + <a href="https://cakephp.org/jp"><b>CakePHP</b></a></td>
 <td><a href="./php-cake/"><code>php-cake/</code></a></td>
 <td><a href="./php-cake/README.md">README.md</a></td>
-<td align="center">✅ 完了</td>
+<td align="center">🚧 開発中</td>
 </tr>
 <tr>
 <td align="center"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/php/php-original.svg" width="32" height="32" alt="PHP"></td>
 <td><a href="https://www.php.net/"><b>PHP</b></a> + <a href="https://codeigniter.com/"><b>Codeigniter</b></a></td>
 <td><a href="./php-codeigniter/"><code>php-codeigniter/</code></a></td>
 <td><a href="./php-codeigniter/README.md">README.md</a></td>
-<td align="center">✅ 完了</td>
+<td align="center">🚧 開発中</td>
 </tr>
 <tr>
 <td align="center"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/php/php-original.svg" width="32" height="32" alt="PHP"></td>
 <td><a href="https://www.php.net/"><b>PHP 7.4</b></a> + <a href="https://fuelphp.com/"><b>FuelPHP</b></a></td>
 <td><a href="./php-fuel/"><code>php-fuel/</code></a></td>
 <td><a href="./php-fuel/README.md">README.md</a></td>
-<td align="center">✅ 完了</td>
+<td align="center">🚧 開発中</td>
 </tr>
 <tr>
 <td align="center"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg" width="32" height="32" alt="Python"></td>
 <td><a href="https://www.python.org/"><b>Python</b></a> + <a href="https://fastapi.tiangolo.com/"><b>Django</b></a></td>
 <td><a href="./python-django/"><code>python-django/</code></a></td>
 <td><a href="./python-django/README.md">README.md</a></td>
-<td align="center">✅ 完了</td>
+<td align="center">🚧 開発中</td>
 </tr>
 <tr>
 <td align="center"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/ruby/ruby-original.svg" width="32" height="32" alt="Ruby"></td>
 <td><a href="https://www.ruby-lang.org/"><b>Ruby</b></a> + <a href="https://rubyonrails.org/"><b>Ruby on Rails</b></a></td>
 <td><a href="./ruby-rails/"><code>ruby-rails/</code></a></td>
 <td><a href="./ruby-rails/README.md">README.md</a></td>
-<td align="center">✅ 完了</td>
+<td align="center">🚧 開発中</td>
 </tr>
 </tbody>
 </table>
