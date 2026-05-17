@@ -24,12 +24,12 @@
 | [`local/app-ruby/`](local/app-ruby/)                       | Ruby（Rails）実行環境。`jwilder/nginx-proxy` 経由でホスト名で振り分ける。       |
 | [`local/common/`](local/common/)                           | 複数バックエンドで共有する共通インフラ。                                       |
 
-`common` 側で Docker ネットワーク `authorization` を作成し、各 `docker-compose` はそのネットワークに参加します（`external: true`）。
+`common` 側で Docker ネットワーク `showcase` を作成し、各 `docker-compose` はそのネットワークに参加します（`external: true`）。
 
 ## :white_check_mark: 前提
 
 - Docker Engine および Docker Compose（`docker compose` または `docker-compose`）が使えること
-- ポート **443**（プロキシ）、**3306**（MySQL）、**6379**（Redis）などがローカルで空いていること（`.env` で変更可）
+- ポート **8443**（プロキシ）がローカルで空いていること（`.env` で変更可）
 
 ## :whale: 共通コンテナ操作
 
@@ -37,14 +37,13 @@
 ```bash
 cd docker
 
-# 初回のみ: スクリプトに実行権限、証明書・環境変数
+# 初回のみ: スクリプトに実行権限を付与
 find ./bin -type f -exec chmod 755 {} +
-bin/docker-environment.sh
 ```
 
 ### コンテナを起動する
 ```bash
-# 起動（内部で authorization ネットワーク作成 + compose up）
+# 起動（内部で showcase ネットワーク作成 + compose up）
 bin/docker-common.sh up
 ```
 
