@@ -10,7 +10,7 @@ services:
       - '${NGINX_HTTP_PORT}'
     volumes:
       - ./nginx/templates:/etc/nginx/templates
-      - ./../../../backends/php-laravel:/var/www/${APP_NAME}
+      - ./../../../backends/php-cakephp:/var/www/${APP_NAME}
       - ./logs/nginx:/var/log/nginx
     depends_on:
       - php
@@ -33,7 +33,7 @@ services:
     ports:
       - '${PHP_XDEBUG_PORT}:9003'
     volumes:
-      - ./../../../backends/php-laravel:/var/www/${APP_NAME}
+      - ./../../../backends/php-cakephp:/var/www/${APP_NAME}
       - ./php/docker.conf:/usr/local/etc/php-fpm.d/zz-docker.conf
       - ./php/php.ini:/usr/local/etc/php/php.ini
       - ./php/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini

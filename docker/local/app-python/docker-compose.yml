@@ -32,10 +32,10 @@ services:
     ports:
       - '${PYTHON_DEBUG_PORT}:5678'
     volumes:
-      - ./../../../backends/python-fastapi:/var/www/${APP_NAME}
+      - ./../../../backends/python-django:/var/www/${APP_NAME}
     working_dir: /var/www/${APP_NAME}
     command: >
       sh -c "pip install -r requirements.txt -q &&
-             uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+             python manage.py runserver 0.0.0.0:8000"
     networks:
       - showcase

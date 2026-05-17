@@ -12,7 +12,7 @@ services:
       - ./nginx/templates:/etc/nginx/templates
       - ./logs/nginx:/var/log/nginx
     depends_on:
-      - kotlin
+      - java
     environment:
       - APP_NAME=${APP_NAME}
       - SERVER_NAME=${SERVER_NAME}
@@ -26,22 +26,20 @@ services:
     networks:
       - showcase
 
-  kotlin:
-    container_name: ${KOTLIN_CONTAINER}
+  java:
+    container_name: ${JAVA_CONTAINER}
     build: java
     ports:
-      - '${KOTLIN_DEBUG_PORT}:5005'
+      - '${JAVA_DEBUG_PORT}:5005'
     volumes:
-      - ./../../../backends/kotlin-ktor:/var/www/${APP_NAME}
-      - kotlin_build:/var/www/${APP_NAME}/build
-      - kotlin_gradle:/var/www/${APP_NAME}/.gradle
-      - kotlin_kotlin:/var/www/${APP_NAME}/.kotlin
+      - ./../../../backends/java-spring-boot:/var/www/${APP_NAME}
+      - java_build:/var/www/${APP_NAME}/build
+      - java_gradle:/var/www/${APP_NAME}/.gradle
     working_dir: /var/www/${APP_NAME}
-    command: gradle run
+    command: ./gradlew bootRun
     networks:
       - showcase
 
 volumes:
-  kotlin_build:
-  kotlin_gradle:
-  kotlin_kotlin:
+  java_build:
+  java_gradle:
