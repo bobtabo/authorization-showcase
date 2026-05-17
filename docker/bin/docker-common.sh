@@ -19,7 +19,11 @@ elif [ "${ARG}" = "start" ]; then
     docker-compose start
 elif [ "${ARG}" = "stop" ]; then
     docker-compose stop
+elif [ "${ARG}" = "env" ]; then
+    cp ./environment/default.crt ./proxy/certs/default.crt
+    cp ./environment/default.key ./proxy/certs/default.key
+    cp ./environment/.env.example ./.env
 else
-    echo "使い方: $0 {up|down|start|stop}"
+    echo "使い方: $0 {up|down|start|stop|env}"
     exit 1
 fi
