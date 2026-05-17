@@ -1,4 +1,4 @@
-FROM php:7.4-fpm
+FROM php:8.5-fpm
 
 # ライブラリのインストール
 RUN apt-get update
@@ -24,8 +24,10 @@ RUN docker-php-ext-install \
       pdo_mysql
 
 # Xdebugのインストール
-RUN pecl install xdebug
-RUN docker-php-ext-enable xdebug
+RUN apt-get install -y $PHPIZE_DEPS \
+    && pecl install xdebug \
+    && docker-php-ext-enable xdebug \
+    && apt-get purge -y --auto-remove $PHPIZE_DEPS
 
 # Composerのインストール
 COPY --from=composer /usr/bin/composer /usr/bin/composer
