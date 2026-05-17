@@ -32,7 +32,7 @@
 </tr>
 <tr>
 <td align="center"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/java/java-original.svg" width="32" height="32" alt="Kotlin"></td>
-<td><a href="https://kotlinlang.org/"><b>Java</b></a> + <a href="https://ktor.io/"><b>Spring Boot</b></a></td>
+<td><a href="https://www.java.com/"><b>Java</b></a> + <a href="https://spring.io/projects/spring-boot"><b>Spring Boot</b></a></td>
 <td><a href="./java-spring/"><code>java-spring/</code></a></td>
 <td><a href="./java-spring/README.md">README.md</a></td>
 <td align="center">🚧 開発中</td>
@@ -60,7 +60,7 @@
 </tr>
 <tr>
 <td align="center"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg" width="32" height="32" alt="Python"></td>
-<td><a href="https://www.python.org/"><b>Python</b></a> + <a href="https://fastapi.tiangolo.com/"><b>Django</b></a></td>
+<td><a href="https://www.python.org/"><b>Python</b></a> + <a href="https://www.djangoproject.com/"><b>Django</b></a></td>
 <td><a href="./python-django/"><code>python-django/</code></a></td>
 <td><a href="./python-django/README.md">README.md</a></td>
 <td align="center">🚧 開発中</td>
