@@ -33,15 +33,15 @@
 <tr>
 <td align="center"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/java/java-original.svg" width="32" height="32" alt="Kotlin"></td>
 <td><a href="https://www.java.com/"><b>Java</b></a> + <a href="https://spring.io/projects/spring-boot"><b>Spring Boot</b></a></td>
-<td><a href="./java-spring/"><code>java-spring/</code></a></td>
-<td><a href="./java-spring/README.md">README.md</a></td>
+<td><a href="./java-springboot/"><code>java-spring/</code></a></td>
+<td><a href="./java-springboot/README.md">README.md</a></td>
 <td align="center">🚧 開発中</td>
 </tr>
 <tr>
 <td align="center"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/php/php-original.svg" width="32" height="32" alt="PHP"></td>
 <td><a href="https://www.php.net/"><b>PHP</b></a> + <a href="https://cakephp.org/jp"><b>CakePHP</b></a></td>
-<td><a href="./php-cake/"><code>php-cake/</code></a></td>
-<td><a href="./php-cake/README.md">README.md</a></td>
+<td><a href="./php-cakephp/"><code>php-cake/</code></a></td>
+<td><a href="./php-cakephp/README.md">README.md</a></td>
 <td align="center">🚧 開発中</td>
 </tr>
 <tr>
@@ -54,8 +54,8 @@
 <tr>
 <td align="center"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/php/php-original.svg" width="32" height="32" alt="PHP"></td>
 <td><a href="https://www.php.net/"><b>PHP 7.4</b></a> + <a href="https://fuelphp.com/"><b>FuelPHP</b></a></td>
-<td><a href="./php-fuel/"><code>php-fuel/</code></a></td>
-<td><a href="./php-fuel/README.md">README.md</a></td>
+<td><a href="php-fuelphp/"><code>php-fuel/</code></a></td>
+<td><a href="php-fuelphp/README.md">README.md</a></td>
 <td align="center">🚧 開発中</td>
 </tr>
 <tr>

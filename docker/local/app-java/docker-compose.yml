@@ -32,7 +32,7 @@ services:
     ports:
       - '${JAVA_DEBUG_PORT}:5005'
     volumes:
-      - ./../../../backends/java-spring-boot:/var/www/${APP_NAME}
+      - ./../../../backends/java-springboot:/var/www/${APP_NAME}
       - java_build:/var/www/${APP_NAME}/build
       - java_gradle:/var/www/${APP_NAME}/.gradle
     working_dir: /var/www/${APP_NAME}
