@@ -8,8 +8,8 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "${SCRIPT_DIR}/../local/common"
 
 if [ "${ARG}" = "up" ]; then
-    docker network create --driver bridge showcase
-    docker-compose up -d --build
+    docker network create --driver bridge showcase 2>/dev/null || true
+    docker-compose up -d --build --force-recreate
 elif [ "${ARG}" = "down" ]; then
     docker-compose down --rmi all --volumes
     docker network rm showcase

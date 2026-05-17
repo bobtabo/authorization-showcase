@@ -11,7 +11,7 @@ if [ "${ARG}" = "up" ]; then
     if [ ! -f .env ]; then
         cp .env.example .env
     fi
-    docker-compose -p app-php-cake -f docker-compose.yml up -d --build
+    docker-compose -p app-php-cake -f docker-compose.yml up -d --build --force-recreate
 elif [ "${ARG}" = "down" ]; then
     docker-compose -p app-php-cake -f docker-compose.yml down --rmi all --volumes
 elif [ "${ARG}" = "exec" ]; then
