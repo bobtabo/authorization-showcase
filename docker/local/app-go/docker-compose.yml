@@ -1,0 +1,39 @@
+networks:
+  showcase:
+    external: true
+
+services:
+  nginx:
+    container_name: ${NGINX_CONTAINER}
+    build: nginx
+    ports:
+      - '${NGINX_HTTP_PORT}'
+    volumes:
+      - ./nginx/templates:/etc/nginx/templates
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - go
+    environment:
+      - APP_NAME=${APP_NAME}
+      - SERVER_NAME=${SERVER_NAME}
+      - APP_PATH=${APP_PATH}
+      - VIRTUAL_HOST=${SERVER_NAME}
+      - VIRTUAL_PORT=80
+      - LETSENCRYPT_HOST=${SERVER_NAME}
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+      - CERT_NAME=default
+      - HTTPS_METHOD=noredirect
+    networks:
+      - showcase
+
+  go:
+    container_name: ${GO_CONTAINER}
+    build: go
+    ports:
+      - '${GO_DEBUG_PORT}:2345'
+    volumes:
+      - ./../../../backends/go-gin:/var/www/${APP_NAME}
+    working_dir: /var/www/${APP_NAME}
+    command: air
+    networks:
+      - showcase

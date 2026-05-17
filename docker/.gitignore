@@ -1,0 +1,11 @@
+/local/common/proxy/certs/default.crt
+/local/common/proxy/certs/default.key
+/local/common/data/
+/local/common/logs/
+/local/app-go/logs/
+/local/app-java/logs/
+/local/app-php-cake/logs/
+/local/app-php-codeigniter/logs/
+/local/app-php-fuel/logs/
+/local/app-python/logs/
+/local/app-ruby/logs/
