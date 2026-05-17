@@ -39,6 +39,9 @@ cd docker
 
 # 初回のみ: スクリプトに実行権限を付与
 find ./bin -type f -exec chmod 755 {} +
+
+# 初回のみ: 証明書・環境変数のセットアップ
+bin/docker-common.sh env
 ```
 
 ### コンテナを起動する
