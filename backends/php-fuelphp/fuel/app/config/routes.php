@@ -39,4 +39,8 @@ return array(
 	 */
 
 	'hello(/:name)?' => array('welcome/hello', 'name' => 'hello'),
+
+	'clients'                       => 'proxy/clients',
+	'gate/issue'                    => 'proxy/gate_issue',
+	'gate/client/(:any)/verify'     => 'proxy/gate_verify/$1',
 );

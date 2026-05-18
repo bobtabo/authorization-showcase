@@ -1,19 +1,22 @@
 <script setup lang="ts">
-import { SignJWT, jwtVerify } from 'jose'
 import { KeyRound, ShieldCheck } from '@lucide/vue'
 
-const CLIENT_OPTIONS = ['クライアントA', 'クライアントB', 'クライアントC', 'クライアントD']
-const BACKEND_OPTIONS = [
-  'Go（Gin）',
-  'Java（Spring Boot）',
-  'PHP（CakePHP）',
-  'PHP（CodeIgniter）',
-  'PHP（FuelPHP）',
-  'Python（Django）',
-  'Ruby（Rails）',
-]
+const BACKEND_MAP: Record<string, string> = {
+  'Go（Gin）': 'http://apis.showcase-go.dev',
+  'Java（Spring Boot）': 'http://apis.showcase-java-spring.dev',
+  'PHP（CakePHP）': 'http://apis.showcase-php-cake.dev',
+  'PHP（CodeIgniter）': 'http://apis.showcase-php-codeigniter.dev',
+  'PHP（FuelPHP）': 'http://apis.showcase-php-fuel.dev',
+  'Python（Django）': 'http://apis.showcase-python.dev',
+  'Ruby（Rails）': 'http://apis.showcase-ruby.dev',
+}
+const BACKEND_OPTIONS = Object.keys(BACKEND_MAP)
 
-const SECRET = new TextEncoder().encode('your-secret-key-change-in-production')
+interface Client {
+  id: number
+  name: string
+  identifier: string
+}
 
 interface VerificationResult {
   success: boolean
@@ -21,40 +24,77 @@ interface VerificationResult {
   error?: string
 }
 
-const selectedClient = ref<string>(CLIENT_OPTIONS[0])
 const selectedBackend = ref<string>(BACKEND_OPTIONS[0])
+const clients = ref<Client[]>([])
+const selectedIdentifier = ref<string>('')
 const memberId = ref<string>('')
+const bearerToken = ref<string>('')
 const jwt = ref<string>('')
+const issueError = ref<string>('')
 const verificationResult = ref<VerificationResult | null>(null)
 const showVerifyButton = ref<boolean>(false)
+const loadingClients = ref<boolean>(false)
+
+const backendUrl = computed(() => BACKEND_MAP[selectedBackend.value])
+const selectedClient = computed(() => clients.value.find(c => c.identifier === selectedIdentifier.value) ?? null)
 
 const generateRandomMemberId = (): void => {
   memberId.value = 'M' + Math.floor(Math.random() * 1000000).toString().padStart(6, '0')
 }
 
-const generateJWT = async (): Promise<void> => {
-  try {
-    const token = await new SignJWT({
-      client: selectedClient.value,
-      memberId: memberId.value,
-    })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setIssuedAt()
-      .setExpirationTime('24h')
-      .sign(SECRET)
+const buildHeaders = (): Record<string, string> => {
+  if (bearerToken.value) return { Authorization: `Bearer ${bearerToken.value}` }
+  return {}
+}
 
-    jwt.value = token
-    showVerifyButton.value = true
-    verificationResult.value = null
-  } catch (error) {
-    console.error('JWT生成エラー:', error)
+const loadClients = async (): Promise<void> => {
+  loadingClients.value = true
+  clients.value = []
+  try {
+    const data = await $fetch<Client[]>(`${backendUrl.value}/clients`)
+    clients.value = Array.isArray(data) ? data : []
+    selectedIdentifier.value = clients.value[0]?.identifier ?? ''
+  } catch {
+    clients.value = []
+  } finally {
+    loadingClients.value = false
+  }
+}
+
+const issueJWT = async (): Promise<void> => {
+  issueError.value = ''
+  jwt.value = ''
+  showVerifyButton.value = false
+  verificationResult.value = null
+  try {
+    const data = await $fetch<Record<string, unknown>>(`${backendUrl.value}/gate/issue`, {
+      headers: buildHeaders(),
+      params: { member: memberId.value },
+    })
+    const token = (data.token ?? data.jwt ?? '') as string
+    if (token) {
+      jwt.value = token
+      showVerifyButton.value = true
+    } else {
+      issueError.value = JSON.stringify(data)
+    }
+  } catch (error: unknown) {
+    issueError.value = error instanceof Error ? error.message : '不明なエラー'
   }
 }
 
 const verifyJWT = async (): Promise<void> => {
+  if (!selectedClient.value || !jwt.value) return
+  verificationResult.value = null
   try {
-    const { payload } = await jwtVerify(jwt.value, SECRET)
-    verificationResult.value = { success: true, payload: payload as Record<string, unknown> }
+    const payload = await $fetch<Record<string, unknown>>(
+      `${backendUrl.value}/gate/client/${selectedClient.value.identifier}/verify`,
+      {
+        headers: buildHeaders(),
+        params: { token: jwt.value },
+      }
+    )
+    verificationResult.value = { success: true, payload }
   } catch (error: unknown) {
     verificationResult.value = {
       success: false,
@@ -66,21 +106,23 @@ const verifyJWT = async (): Promise<void> => {
 const resetForm = (): void => {
   generateRandomMemberId()
   jwt.value = ''
+  issueError.value = ''
   verificationResult.value = null
   showVerifyButton.value = false
 }
 
 watch(selectedBackend, () => {
-  selectedClient.value = CLIENT_OPTIONS[0]
   resetForm()
+  loadClients()
 })
 
-watch(selectedClient, () => {
+watch(selectedIdentifier, () => {
   resetForm()
 })
 
 onMounted(() => {
   generateRandomMemberId()
+  loadClients()
 })
 </script>
 
@@ -120,11 +162,18 @@ onMounted(() => {
             <div>
               <label class="block mb-2 text-sm text-gray-600">Client Name</label>
               <select
-                v-model="selectedClient"
-                class="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all cursor-pointer"
+                v-model="selectedIdentifier"
+                :disabled="loadingClients || clients.length === 0"
+                class="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all cursor-pointer disabled:opacity-50"
               >
-                <option v-for="client in CLIENT_OPTIONS" :key="client" :value="client">
-                  {{ client }}
+                <option v-if="loadingClients" value="">ロード中...</option>
+                <option v-else-if="clients.length === 0" value="">クライアントなし</option>
+                <option
+                  v-for="client in clients"
+                  :key="client.identifier"
+                  :value="client.identifier"
+                >
+                  {{ client.name }}
                 </option>
               </select>
             </div>
@@ -136,15 +185,35 @@ onMounted(() => {
               </div>
             </div>
 
+            <div>
+              <label class="block mb-2 text-sm text-gray-600">
+                Bearer Token <span class="text-gray-400 text-xs">（省略可）</span>
+              </label>
+              <input
+                v-model="bearerToken"
+                type="text"
+                placeholder="アクセストークンを入力"
+                class="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+              />
+            </div>
+
             <button
-              class="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
-              @click="generateJWT"
+              :disabled="!selectedClient"
+              class="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              @click="issueJWT"
             >
               <KeyRound :size="20" />
               JWTを発行する
             </button>
 
-            <div v-if="jwt" class="space-y-4 pt-5">
+            <div
+              v-if="issueError"
+              class="bg-gradient-to-r from-red-50 to-pink-50 p-4 rounded-xl border border-red-200"
+            >
+              <p class="text-sm text-red-600 font-mono break-all">{{ issueError }}</p>
+            </div>
+
+            <div v-if="jwt" class="space-y-4 pt-2">
               <div>
                 <label class="block mb-2 text-sm text-gray-600">JWT Token</label>
                 <textarea
@@ -165,7 +234,7 @@ onMounted(() => {
               </button>
             </div>
 
-            <div v-if="verificationResult" class="mt-5">
+            <div v-if="verificationResult" class="mt-2">
               <div
                 v-if="verificationResult.success"
                 class="bg-gradient-to-r from-emerald-50 to-teal-50 p-5 rounded-xl border border-emerald-200"
