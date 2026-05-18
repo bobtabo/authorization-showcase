@@ -1,4 +1,4 @@
-package com.example.authorization;
+package com.authorization.showcase;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
