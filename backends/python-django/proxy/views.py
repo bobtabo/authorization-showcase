@@ -1,3 +1,8 @@
+"""
+proxy.views — 認可サーバーへのリバースプロキシビューモジュール。
+
+Author: Satoshi Nagashiba <satoshi.nagashiba@gmail.com>
+"""
 import os
 import requests
 from django.http import HttpResponse, JsonResponse

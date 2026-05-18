@@ -1,3 +1,4 @@
+// 認可サーバーへのリバースプロキシを提供するエントリーポイントです。
 package main
 
 import (
@@ -8,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// authServerURL は環境変数から認可サーバーの URL を取得します。
 func authServerURL() string {
 	if url := os.Getenv("AUTH_SERVER_URL"); url != "" {
 		return url
@@ -15,6 +17,7 @@ func authServerURL() string {
 	return "http://host.docker.internal:8080/function/php"
 }
 
+// proxyGet は指定 URL に GET リクエストを転送し、レスポンスをそのまま返します。
 func proxyGet(c *gin.Context, targetURL string) {
 	req, err := http.NewRequest(http.MethodGet, targetURL, nil)
 	if err != nil {
@@ -42,6 +45,7 @@ func proxyGet(c *gin.Context, targetURL string) {
 	c.Data(resp.StatusCode, ct, body)
 }
 
+// buildURL はベース URL・パス・クエリ文字列を結合して完全な URL を返します。
 func buildURL(base, path, query string) string {
 	url := base + "/" + path
 	if query != "" {
@@ -50,6 +54,7 @@ func buildURL(base, path, query string) string {
 	return url
 }
 
+// main はルーターを起動します。
 func main() {
 	r := gin.Default()
 

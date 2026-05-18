@@ -1,31 +1,45 @@
+# frozen_string_literal: true
+#
+# 認可サーバーへのリバースプロキシを提供するコントローラー。
+#
+# @author Satoshi Nagashiba <satoshi.nagashiba@gmail.com>
+
 require 'net/http'
 require 'uri'
 
+# 認可サーバーへのリバースプロキシを提供するコントローラークラスです。
+# @author Satoshi Nagashiba <satoshi.nagashiba@gmail.com>
 class ProxyController < ApplicationController
   skip_before_action :verify_authenticity_token
 
+  # ヘルスチェック応答を返します。
   def health
     render json: { status: 'ok' }
   end
 
+  # クライアント一覧を認可サーバーから取得して返します。
   def clients
     proxy_get('clients')
   end
 
+  # クライアント会員向け JWT を発行して返します。
   def gate_issue
     proxy_get('gate/issue')
   end
 
+  # JWT を検証してペイロードを返します。
   def gate_verify
     proxy_get("gate/client/#{params[:identifier]}/verify")
   end
 
   private
 
+  # 認可サーバーの URL を取得します。
   def auth_server_url
     ENV['AUTH_SERVER_URL'] || 'http://host.docker.internal:8080/function/php'
   end
 
+  # 指定パスへ GET リクエストを転送し、認可サーバーのレスポンスをそのまま返します。
   def proxy_get(path)
     query = request.query_string
     uri = URI("#{auth_server_url}/#{path}#{query.present? ? "?#{query}" : ''}")
