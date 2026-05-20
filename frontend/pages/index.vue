@@ -16,6 +16,7 @@ interface Client {
   id: number
   name: string
   identifier: string
+  status: number
 }
 
 interface VerificationResult {
@@ -50,7 +51,7 @@ const loadClients = async (): Promise<void> => {
   loadingClients.value = true
   clients.value = []
   try {
-    const data = await $fetch<Client[]>(`${backendUrl.value}/clients`)
+    const data = await $fetch<Client[]>(`${backendUrl.value}/clients?statuses[]=2`)
     clients.value = Array.isArray(data) ? data : []
     selectedIdentifier.value = clients.value[0]?.identifier ?? ''
   } catch {
