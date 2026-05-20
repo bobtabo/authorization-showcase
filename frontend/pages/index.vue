@@ -2,13 +2,13 @@
 import { KeyRound, ShieldCheck } from '@lucide/vue'
 
 const BACKEND_MAP: Record<string, string> = {
-  'Go（Gin）': 'http://apis.showcase-go.dev',
-  'Java（Spring Boot）': 'http://apis.showcase-java-spring.dev',
-  'PHP（CakePHP）': 'http://apis.showcase-php-cake.dev',
-  'PHP（CodeIgniter）': 'http://apis.showcase-php-codeigniter.dev',
-  'PHP（FuelPHP）': 'http://apis.showcase-php-fuel.dev',
-  'Python（Django）': 'http://apis.showcase-python.dev',
-  'Ruby（Rails）': 'http://apis.showcase-ruby.dev',
+  'Go（Gin）': 'http://localhost:18080',
+  'Java（Spring Boot）': 'http://localhost:18081',
+  'PHP（CakePHP）': 'http://localhost:18082',
+  'PHP（CodeIgniter）': 'http://localhost:18083',
+  'PHP（FuelPHP）': 'http://localhost:18084',
+  'Python（Django）': 'http://localhost:18085',
+  'Ruby（Rails）': 'http://localhost:18086',
 }
 const BACKEND_OPTIONS = Object.keys(BACKEND_MAP)
 
@@ -43,8 +43,7 @@ const generateRandomMemberId = (): void => {
 }
 
 const buildHeaders = (): Record<string, string> => {
-  if (bearerToken.value) return { Authorization: `Bearer ${bearerToken.value}` }
-  return {}
+  return { Authorization: `Bearer ${bearerToken.value}` }
 }
 
 const loadClients = async (): Promise<void> => {
@@ -187,7 +186,7 @@ onMounted(() => {
 
             <div>
               <label class="block mb-2 text-sm text-gray-600">
-                Bearer Token <span class="text-gray-400 text-xs">（省略可）</span>
+                Bearer Token <span class="text-red-500 text-xs">*</span>
               </label>
               <input
                 v-model="bearerToken"
@@ -198,7 +197,7 @@ onMounted(() => {
             </div>
 
             <button
-              :disabled="!selectedClient"
+              :disabled="!selectedClient || !bearerToken"
               class="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               @click="issueJWT"
             >

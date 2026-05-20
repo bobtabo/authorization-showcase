@@ -74,7 +74,7 @@ class Controller_Proxy extends Controller
      */
     public function action_clients()
     {
-        return static::proxyGet('clients');
+        return static::proxyGet('api/clients');
     }
 
     /**
@@ -84,7 +84,7 @@ class Controller_Proxy extends Controller
      */
     public function action_gate_issue()
     {
-        return static::proxyGet('gate/issue');
+        return static::proxyGet('api/gate/issue');
     }
 
     /**
@@ -95,6 +95,6 @@ class Controller_Proxy extends Controller
      */
     public function action_gate_verify($identifier)
     {
-        return static::proxyGet('gate/client/' . $identifier . '/verify');
+        return static::proxyGet('api/gate/client/' . $identifier . '/verify');
     }
 }

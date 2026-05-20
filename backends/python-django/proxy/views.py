@@ -35,12 +35,12 @@ def health(request):
 
 
 def clients(request):
-    return _proxy_get(request, 'clients')
+    return _proxy_get(request, 'api/clients')
 
 
 def gate_issue(request):
-    return _proxy_get(request, 'gate/issue')
+    return _proxy_get(request, 'api/gate/issue')
 
 
 def gate_verify(request, identifier: str):
-    return _proxy_get(request, f'gate/client/{identifier}/verify')
+    return _proxy_get(request, f'api/gate/client/{identifier}/verify')

@@ -2,6 +2,7 @@ package com.authorization.showcase;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestClient;
@@ -13,7 +14,6 @@ import org.springframework.web.client.RestClientResponseException;
  * @author Satoshi Nagashiba <satoshi.nagashiba@gmail.com>
  */
 @RestController
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class ProxyController {
 
     @Value("${auth.server.url:http://host.docker.internal:8080/function/php}")
@@ -39,11 +39,18 @@ public class ProxyController {
             if (authHeader != null && !authHeader.isEmpty()) {
                 spec = spec.header("Authorization", authHeader);
             }
-            return spec.retrieve().toEntity(String.class);
+            var resp = spec.retrieve().toEntity(String.class);
+            return ResponseEntity.status(resp.getStatusCode())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(resp.getBody());
         } catch (RestClientResponseException e) {
-            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
+            return ResponseEntity.status(e.getStatusCode())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(e.getResponseBodyAsString());
         } catch (Exception e) {
-            return ResponseEntity.status(502).body("{\"error\":\"" + e.getMessage() + "\"}");
+            return ResponseEntity.status(502)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body("{\"error\":\"" + e.getMessage() + "\"}");
         }
     }
 
@@ -68,7 +75,7 @@ public class ProxyController {
     public ResponseEntity<String> clients(
             HttpServletRequest request,
             @RequestHeader(value = "Authorization", required = false) String auth) {
-        return proxyGet("clients", request.getQueryString(), auth);
+        return proxyGet("api/clients", request.getQueryString(), auth);
     }
 
     /**
@@ -82,7 +89,7 @@ public class ProxyController {
     public ResponseEntity<String> gateIssue(
             HttpServletRequest request,
             @RequestHeader(value = "Authorization", required = false) String auth) {
-        return proxyGet("gate/issue", request.getQueryString(), auth);
+        return proxyGet("api/gate/issue", request.getQueryString(), auth);
     }
 
     /**
@@ -98,6 +105,6 @@ public class ProxyController {
             @PathVariable String identifier,
             HttpServletRequest request,
             @RequestHeader(value = "Authorization", required = false) String auth) {
-        return proxyGet("gate/client/" + identifier + "/verify", request.getQueryString(), auth);
+        return proxyGet("api/gate/client/" + identifier + "/verify", request.getQueryString(), auth);
     }
 }

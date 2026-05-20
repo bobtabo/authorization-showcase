@@ -58,17 +58,6 @@ func buildURL(base, path, query string) string {
 func main() {
 	r := gin.Default()
 
-	r.Use(func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "*")
-		c.Header("Access-Control-Allow-Methods", "GET, OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "Authorization, Content-Type, Accept")
-		if c.Request.Method == http.MethodOptions {
-			c.AbortWithStatus(http.StatusNoContent)
-			return
-		}
-		c.Next()
-	})
-
 	base := authServerURL()
 
 	r.GET("/health", func(c *gin.Context) {
@@ -76,16 +65,16 @@ func main() {
 	})
 
 	r.GET("/clients", func(c *gin.Context) {
-		proxyGet(c, buildURL(base, "clients", c.Request.URL.RawQuery))
+		proxyGet(c, buildURL(base, "api/clients", c.Request.URL.RawQuery))
 	})
 
 	r.GET("/gate/issue", func(c *gin.Context) {
-		proxyGet(c, buildURL(base, "gate/issue", c.Request.URL.RawQuery))
+		proxyGet(c, buildURL(base, "api/gate/issue", c.Request.URL.RawQuery))
 	})
 
 	r.GET("/gate/client/:identifier/verify", func(c *gin.Context) {
 		identifier := c.Param("identifier")
-		proxyGet(c, buildURL(base, "gate/client/"+identifier+"/verify", c.Request.URL.RawQuery))
+		proxyGet(c, buildURL(base, "api/gate/client/"+identifier+"/verify", c.Request.URL.RawQuery))
 	})
 
 	r.Run(":8080")

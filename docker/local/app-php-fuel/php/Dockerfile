@@ -23,9 +23,9 @@ RUN docker-php-ext-install \
       bcmath \
       pdo_mysql
 
-# Xdebugのインストール
+# Xdebugのインストール（PHP 7.4 対応の最終バージョン）
 RUN apt-get install -y $PHPIZE_DEPS \
-    && pecl install xdebug \
+    && pecl install xdebug-3.1.6 \
     && docker-php-ext-enable xdebug \
     && apt-get purge -y --auto-remove $PHPIZE_DEPS
 

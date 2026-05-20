@@ -6,6 +6,7 @@ RUN apt-get install -y \
       sudo \
       libpq-dev \
       libonig-dev \
+      libicu-dev \
       git \
       zip \
       unzip \
@@ -21,7 +22,8 @@ RUN docker-php-ext-install \
       mbstring \
       pdo \
       bcmath \
-      pdo_mysql
+      pdo_mysql \
+      intl
 
 # Xdebugのインストール
 RUN apt-get install -y $PHPIZE_DEPS \

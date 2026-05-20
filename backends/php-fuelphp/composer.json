@@ -6,7 +6,7 @@
     "license": "MIT",
     "require": {
         "php": ">=5.4",
-        "composer/installers": "~1.0",
+        "composer/installers": "^2.3",
         "fuel/core": "dev-1.9/develop",
         "fuel/auth": "dev-1.9/develop",
         "fuel/email": "dev-1.9/develop",
@@ -28,7 +28,10 @@
         "zordius/lightncandy": "Allow Handlebars templating with an extremely fast PHP implementation of handlebars"
     },
     "config": {
-        "vendor-dir": "fuel/vendor"
+        "vendor-dir": "fuel/vendor",
+        "allow-plugins": {
+            "composer/installers": true
+        }
     },
     "extra": {
         "installer-paths": {

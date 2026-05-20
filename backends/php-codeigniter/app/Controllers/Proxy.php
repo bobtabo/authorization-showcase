@@ -85,7 +85,7 @@ class Proxy extends BaseController
      */
     public function clients(): \CodeIgniter\HTTP\ResponseInterface
     {
-        return $this->proxyGet('clients');
+        return $this->proxyGet('api/clients');
     }
 
     /**
@@ -95,7 +95,7 @@ class Proxy extends BaseController
      */
     public function gateIssue(): \CodeIgniter\HTTP\ResponseInterface
     {
-        return $this->proxyGet('gate/issue');
+        return $this->proxyGet('api/gate/issue');
     }
 
     /**
@@ -106,6 +106,6 @@ class Proxy extends BaseController
      */
     public function gateVerify(string $identifier): \CodeIgniter\HTTP\ResponseInterface
     {
-        return $this->proxyGet("gate/client/{$identifier}/verify");
+        return $this->proxyGet("api/gate/client/{$identifier}/verify");
     }
 }

@@ -11,11 +11,11 @@ if [ "${ARG}" = "up" ]; then
     if [ ! -f .env ]; then
         cp .env.example .env
     fi
-    docker-compose -p app-java -f docker-compose.yml up -d --build --force-recreate
+    docker-compose -p showcase-java -f docker-compose.yml up -d --build --force-recreate
 elif [ "${ARG}" = "down" ]; then
-    docker-compose -p app-java -f docker-compose.yml down --rmi all --volumes
+    docker-compose -p showcase-java -f docker-compose.yml down --rmi all --volumes
 elif [ "${ARG}" = "exec" ]; then
-    docker-compose -p app-java -f docker-compose.yml exec --user 1000 java bash
+    docker-compose -p showcase-java -f docker-compose.yml exec --user 1000 java bash
 else
     echo "使い方: $0 {up|down|exec}"
     exit 1

@@ -93,7 +93,7 @@ class ProxyController extends AppController
      */
     public function clients(): ResponseInterface
     {
-        return $this->proxyGet('clients');
+        return $this->proxyGet('api/clients');
     }
 
     /**
@@ -103,17 +103,17 @@ class ProxyController extends AppController
      */
     public function gateIssue(): ResponseInterface
     {
-        return $this->proxyGet('gate/issue');
+        return $this->proxyGet('api/gate/issue');
     }
 
     /**
      * JWT を検証してペイロードを返します。
      *
-     * @param string $identifier クライアント識別子
      * @return ResponseInterface レスポンス
      */
-    public function gateVerify(string $identifier): ResponseInterface
+    public function gateVerify(): ResponseInterface
     {
-        return $this->proxyGet('gate/client/' . $identifier . '/verify');
+        $identifier = $this->request->getParam('identifier', '');
+        return $this->proxyGet('api/gate/client/' . $identifier . '/verify');
     }
 }

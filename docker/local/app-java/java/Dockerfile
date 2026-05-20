@@ -11,6 +11,7 @@ RUN dnf install -y \
       shadow-utils \
       tar \
       gzip \
+      findutils \
     && dnf clean all
 
 # gosu のインストール（Amazon Linux リポジトリに含まれないため GitHub から取得）

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-APP_DIR=/var/www/app-java-spring
+APP_DIR=/var/www/app-java
 
 for dir in build .gradle; do
     mkdir -p "${APP_DIR}/${dir}"

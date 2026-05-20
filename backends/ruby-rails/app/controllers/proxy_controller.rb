@@ -10,7 +10,7 @@ require 'uri'
 # 認可サーバーへのリバースプロキシを提供するコントローラークラスです。
 # @author Satoshi Nagashiba <satoshi.nagashiba@gmail.com>
 class ProxyController < ApplicationController
-  skip_before_action :verify_authenticity_token
+  skip_before_action :verify_authenticity_token, raise: false
 
   # ヘルスチェック応答を返します。
   def health
@@ -19,17 +19,17 @@ class ProxyController < ApplicationController
 
   # クライアント一覧を認可サーバーから取得して返します。
   def clients
-    proxy_get('clients')
+    proxy_get('api/clients')
   end
 
   # クライアント会員向け JWT を発行して返します。
   def gate_issue
-    proxy_get('gate/issue')
+    proxy_get('api/gate/issue')
   end
 
   # JWT を検証してペイロードを返します。
   def gate_verify
-    proxy_get("gate/client/#{params[:identifier]}/verify")
+    proxy_get("api/gate/client/#{params[:identifier]}/verify")
   end
 
   private
