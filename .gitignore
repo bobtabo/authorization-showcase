@@ -4,4 +4,8 @@
 /generated/prisma
 .aider*
 .env
+!docker/local/common/.env
 .claude/
+/backends/go-gin/tmp/
+/backends/java-springboot/.gradle/
+/backends/java-springboot/build/

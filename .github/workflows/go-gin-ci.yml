@@ -1,0 +1,33 @@
+# Go（Gin）CI ワークフロー
+# developブランチの backends/go-gin/** 変更時に CI を実行
+name: Go（Gin）CI
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'backends/go-gin/**'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.25'
+
+      - name: Install dependencies
+        run: go mod download
+        working-directory: backends/go-gin
+
+      - name: Run tests
+        run: go test ./...
+        working-directory: backends/go-gin
+        env:
+          AUTH_SERVER_URL: https://ample-precise-knee.ngrok-free.dev/function/php

@@ -23,16 +23,14 @@ RUN docker-php-ext-install \
       bcmath \
       pdo_mysql
 
-# Xdebugのインストール
-RUN pecl install xdebug
-RUN docker-php-ext-enable xdebug
+# Xdebugのインストール（PHP 7.4 対応の最終バージョン）
+RUN apt-get install -y $PHPIZE_DEPS \
+    && pecl install xdebug-3.1.6 \
+    && docker-php-ext-enable xdebug \
+    && apt-get purge -y --auto-remove $PHPIZE_DEPS
 
 # Composerのインストール
 COPY --from=composer /usr/bin/composer /usr/bin/composer
-
-# PhpRedis
-RUN git clone https://github.com/phpredis/phpredis.git /usr/src/php/ext/redis \
-    && docker-php-ext-install redis
 
 # ユーザーを作成
 ARG DOCKER_UID=1000

@@ -1,0 +1,33 @@
+# Java（Spring Boot）CI ワークフロー
+# developブランチの backends/java-springboot/** 変更時に CI を実行
+name: Java（Spring Boot）CI
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'backends/java-springboot/**'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run tests
+        run: ./gradlew test
+        working-directory: backends/java-springboot
+        env:
+          AUTH_SERVER_URL: https://ample-precise-knee.ngrok-free.dev/function/php
