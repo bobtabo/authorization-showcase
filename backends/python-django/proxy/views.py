@@ -1,7 +1,7 @@
 """
-proxy.views — 認可サーバーへのリバースプロキシビューモジュール。
+This is a program developed by BobTabo.
 
-Author: Satoshi Nagashiba <satoshi.nagashiba@gmail.com>
+Copyright (c) 2026 BobTabo. All Rights Reserved.
 """
 import os
 import requests

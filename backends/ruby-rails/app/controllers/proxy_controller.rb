@@ -1,12 +1,16 @@
 # frozen_string_literal: true
 #
-# 認可サーバーへのリバースプロキシを提供するコントローラー。
+# This is a program developed by BobTabo.
 #
-# @author Satoshi Nagashiba <satoshi.nagashiba@gmail.com>
+# Copyright (c) 2026 BobTabo. All Rights Reserved.
 
 require 'net/http'
 require 'uri'
 
+# This is a program developed by BobTabo.
+#
+# Copyright (c) 2026 BobTabo. All Rights Reserved.
+#
 # 認可サーバーへのリバースプロキシを提供するコントローラークラスです。
 # @author Satoshi Nagashiba <satoshi.nagashiba@gmail.com>
 class ProxyController < ApplicationController
