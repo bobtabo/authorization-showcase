@@ -1,0 +1,29 @@
+# Ruby（Rails）CI ワークフロー
+# developブランチの backends/ruby-rails/** 変更時に CI を実行
+name: Ruby（Rails）CI
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'backends/ruby-rails/**'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.4'
+          bundler-cache: true
+          working-directory: backends/ruby-rails
+
+      - name: Run tests
+        run: bundle exec rails test test/controllers/
+        working-directory: backends/ruby-rails
