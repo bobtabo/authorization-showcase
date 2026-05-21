@@ -1,19 +1,19 @@
 <p align="center">
-<a href="https://www.php.net/" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/php/php-original.svg" height="72" alt="PHP"></a>
+<a href="https://www.java.com/" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/java/java-original.svg" height="72" alt="Java"></a>
 &nbsp;&nbsp;
-<a href="https://fuelphp.com/" target="_blank"><img src="https://avatars.githubusercontent.com/u/1149176" height="72" alt="FuelPHP"></a>
+<a href="https://spring.io/projects/spring-boot" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/spring/spring-original.svg" height="72" alt="Spring Boot"></a>
 </p>
 
 <p align="center">
-<a href="https://www.php.net/"><img src="https://img.shields.io/badge/PHP-7.4-777BB4?logo=php&logoColor=white" alt="PHP 7.4"></a>
-<a href="https://fuelphp.com/"><img src="https://img.shields.io/badge/FuelPHP-1.9-orange" alt="FuelPHP 1.9"></a>
+<a href="https://www.java.com/"><img src="https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white" alt="Java 21"></a>
+<a href="https://spring.io/projects/spring-boot"><img src="https://img.shields.io/badge/Spring_Boot-4.0-6DB33F?logo=springboot&logoColor=white" alt="Spring Boot 4.0"></a>
 </p>
 
 ---
 
 ## :book: 概要
 
-認可サーバー API（JWT 発行・検証）を利用する **PHP 7.4 + FuelPHP** 実装のショーケースです。  
+認可サーバー API（JWT 発行・検証）を利用する **Java + Spring Boot** 実装のショーケースです。  
 フロントエンドからのリクエストを認可サーバー（`AUTH_SERVER_URL`）に転送し、JWT 発行・検証を行います。
 
 ---
@@ -22,9 +22,9 @@
 
 | 項目 | バージョン |
 |:----|:---------|
-| PHP | 7.4 |
-| FuelPHP | 1.9 |
-| PHPUnit | 11.x |
+| Java | 21 |
+| Spring Boot | 4.0 |
+| Gradle | 9.x |
 
 ---
 
@@ -34,8 +34,8 @@
 
 ```bash
 cd docker
-bin/docker-php-fuel.sh up
-bin/docker-php-fuel.sh exec
+bin/docker-java.sh up
+bin/docker-java.sh exec
 cp .env.example .env
 ```
 
@@ -44,11 +44,8 @@ cp .env.example .env
 ## :white_check_mark: テスト
 
 ```bash
-# 依存パッケージインストール
-composer install
-
 # テスト実行
-AUTH_SERVER_URL=https://<ngrok-url>/function/php ./fuel/vendor/bin/phpunit -c fuel/core/phpunit.xml --testsuite app
+AUTH_SERVER_URL=https://<ngrok-url>/function/php ./gradlew test
 ```
 
 テストは `AUTH_SERVER_URL` で指定した認可サーバーに対して実際にリクエストを送るインテグレーションテストです。

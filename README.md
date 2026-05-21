@@ -1,6 +1,6 @@
 # <img src="https://raw.githubusercontent.com/bobtabo/authorization/main/frontend/app/icon.svg" height="25" style="margin-top:-4px;vertical-align:middle;" alt="認可サーバー"> 認可サーバー（JWT発行／検証）
 
-このリポジトリは、OAuth2/OIDC 準拠の認可サーバー構築プロジェクトです。  
+このリポジトリは、認可サーバー API（JWT 発行／検証）を複数の言語・フレームワークで利用するショーケースです。  
 各コンポーネントの詳細は、それぞれのディレクトリにあるドキュメントを参照してください。
 
 ---
@@ -33,10 +33,10 @@
 ```.
 ├── 📂 backends/           # バックエンド構成（PHP / Go / Java / Python / Ruby）
 │   ├── go-gin/
-│   ├── java-spring/
-│   ├── php-cake/
+│   ├── java-springboot/
+│   ├── php-cakephp/
 │   ├── php-codeigniter/
-│   ├── php-fuel/
+│   ├── php-fuelphp/
 │   ├── python-django/
 │   └── ruby-rails/
 ├── 📂 docker/             # コンテナ定義
@@ -50,7 +50,7 @@
 
 | ディレクトリ              | 内容                              | ドキュメント                                 |
 |:--------------------|:--------------------------------|:---------------------------------------|
-| **`backends/`**     | バックエンド構成                        | [README.md](./backends/README.md)      |
+| **`backends/`**     | 認可サーバー API 利用バックエンド（言語・FW 別）   | [README.md](./backends/README.md)      |
 | **`docker/`**       | コンテナ定義                          | [README.md](./docker/README.md)        |
 | **`frontend/`**     | JWTサンプル画面（Vue.js / Nuxt.js）     | [README.md](./frontend/README.md)      |
 
@@ -108,7 +108,7 @@ npm run dev
 #### 6.1 Go（Gin）
 
 ```bash
-bin/docker-go-gin.sh exec
+bin/docker-go.sh exec
 cp .env.example .env
 ```
 
@@ -151,7 +151,7 @@ cp .env.example .env
 #### 6.7 Ruby（Rails）
 
 ```bash
-bin/docker-rb-rails.sh exec
+bin/docker-ruby.sh exec
 bundle install
 cp .env.example .env
 ```

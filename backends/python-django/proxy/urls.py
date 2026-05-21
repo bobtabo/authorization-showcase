@@ -1,7 +1,7 @@
 """
-proxy.urls — プロキシアプリの URL ルーティング設定モジュール。
+This is a program developed by BobTabo.
 
-Author: Satoshi Nagashiba <satoshi.nagashiba@gmail.com>
+Copyright (c) 2026 BobTabo. All Rights Reserved.
 """
 from django.urls import path
 from . import views
