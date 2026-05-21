@@ -49,7 +49,11 @@ class Controller_Proxy extends Controller
             ],
         ]);
 
-        $body = @file_get_contents($url, false, $context);
+        try {
+            $body = @file_get_contents($url, false, $context);
+        } catch (\Throwable $e) {
+            $body = false;
+        }
         if ($body === false) {
             $response = new \Response('{"error":"Failed to connect to auth server"}', 502);
             $response->set_header('Content-Type', 'application/json; charset=utf-8');

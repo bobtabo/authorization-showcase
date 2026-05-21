@@ -83,7 +83,8 @@ class MockHttpStreamFuel
 
         if ($this->context !== null) {
             $opts = stream_context_get_options($this->context);
-            $raw  = $opts['mockhttp']['header'] ?? '';
+            // コントローラーは 'http' キーでコンテキストを作成するため 'http' から読む
+            $raw  = $opts['http']['header'] ?? $opts['mockhttp']['header'] ?? '';
             foreach (explode("\r\n", $raw) as $line) {
                 if (trim($line) !== '') {
                     self::$lastRequestHeaders[] = $line;
