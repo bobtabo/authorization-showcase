@@ -54,11 +54,9 @@ func buildURL(base, path, query string) string {
 	return url
 }
 
-// main はルーターを起動します。
-func main() {
+// newRouter はルーターを生成して返します。
+func newRouter(base string) *gin.Engine {
 	r := gin.Default()
-
-	base := authServerURL()
 
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
@@ -77,5 +75,10 @@ func main() {
 		proxyGet(c, buildURL(base, "api/gate/client/"+identifier+"/verify", c.Request.URL.RawQuery))
 	})
 
-	r.Run(":8080")
+	return r
+}
+
+// main はルーターを起動します。
+func main() {
+	newRouter(authServerURL()).Run(":8080")
 }
