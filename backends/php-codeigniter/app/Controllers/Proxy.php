@@ -9,10 +9,6 @@
 namespace App\Controllers;
 
 /**
- * This is a program developed by BobTabo.
- *
- * Copyright (c) 2026 BobTabo. All Rights Reserved.
- *
  * 認可サーバーへのリバースプロキシを提供するコントローラークラスです。
  *
  * @author Satoshi Nagashiba <satoshi.nagashiba@gmail.com>
