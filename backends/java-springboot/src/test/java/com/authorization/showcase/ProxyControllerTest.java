@@ -1,19 +1,26 @@
 package com.authorization.showcase;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * This is a program developed by BobTabo.
+ *
+ * Copyright (c) 2026 BobTabo. All Rights Reserved.
+ */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ProxyControllerTest {
 
@@ -21,11 +28,13 @@ class ProxyControllerTest {
     static final String IDENTIFIER   = "alpha-tech";
     static final String MEMBER       = "M000001";
 
-    @Autowired
-    private TestRestTemplate restTemplate;
+    @LocalServerPort
+    private int port;
 
     @Autowired
     private ProxyController proxyController;
+
+    private HttpClient http;
 
     @DynamicPropertySource
     static void authServerProperties(DynamicPropertyRegistry registry) {
@@ -35,64 +44,78 @@ class ProxyControllerTest {
         }
     }
 
-    private HttpHeaders authHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", BEARER_TOKEN);
-        return headers;
+    @BeforeEach
+    void setUp() {
+        http = HttpClient.newHttpClient();
+    }
+
+    private String base() {
+        return "http://localhost:" + port;
+    }
+
+    private HttpRequest.Builder get(String path) {
+        return HttpRequest.newBuilder()
+                .uri(URI.create(base() + path))
+                .GET();
+    }
+
+    private HttpRequest.Builder getWithAuth(String path) {
+        return get(path).header("Authorization", BEARER_TOKEN);
     }
 
     @Test
-    void health_returns200() {
-        ResponseEntity<String> response = restTemplate.getForEntity("/health", String.class);
+    void health_returns200() throws Exception {
+        HttpResponse<String> response = http.send(
+                get("/health").build(), HttpResponse.BodyHandlers.ofString());
 
-        assertThat(response.getStatusCode().value()).isEqualTo(200);
-        assertThat(response.getBody()).contains("\"status\"", "\"ok\"");
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.body()).contains("\"status\"", "\"ok\"");
     }
 
     @Test
-    void clients_returns_json_array() {
-        ResponseEntity<String> response = restTemplate.exchange(
-                "/clients?statuses[]=2", HttpMethod.GET, new HttpEntity<>(authHeaders()), String.class);
+    void clients_returns_json_array() throws Exception {
+        HttpResponse<String> response = http.send(
+                getWithAuth("/clients?statuses[]=2").build(), HttpResponse.BodyHandlers.ofString());
 
-        assertThat(response.getStatusCode().value()).isEqualTo(200);
-        assertThat(response.getBody()).startsWith("[");
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.body()).startsWith("[");
     }
 
     @Test
-    void gateIssue_returns_token() {
-        ResponseEntity<String> response = restTemplate.exchange(
-                "/gate/issue?member=" + MEMBER, HttpMethod.GET, new HttpEntity<>(authHeaders()), String.class);
+    void gateIssue_returns_token() throws Exception {
+        HttpResponse<String> response = http.send(
+                getWithAuth("/gate/issue?member=" + MEMBER).build(), HttpResponse.BodyHandlers.ofString());
 
-        assertThat(response.getStatusCode().value()).isEqualTo(200);
-        assertThat(response.getBody()).contains("token");
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.body()).contains("token");
     }
 
     @Test
-    void gateVerify_returns_payload() {
-        ResponseEntity<String> issueResp = restTemplate.exchange(
-                "/gate/issue?member=" + MEMBER, HttpMethod.GET, new HttpEntity<>(authHeaders()), String.class);
-        assertThat(issueResp.getStatusCode().value()).isEqualTo(200);
+    void gateVerify_returns_payload() throws Exception {
+        HttpResponse<String> issueResp = http.send(
+                getWithAuth("/gate/issue?member=" + MEMBER).build(), HttpResponse.BodyHandlers.ofString());
+        assertThat(issueResp.statusCode()).isEqualTo(200);
 
-        String body = issueResp.getBody();
+        String body = issueResp.body();
         int start = body.indexOf("\"token\":");
         assertThat(start).isGreaterThan(-1);
         String jwt = body.substring(start + 9).replaceAll("^\"|\".*", "");
 
-        ResponseEntity<String> verifyResp = restTemplate.exchange(
-                "/gate/client/" + IDENTIFIER + "/verify?token=" + jwt,
-                HttpMethod.GET, new HttpEntity<>(authHeaders()), String.class);
+        HttpResponse<String> verifyResp = http.send(
+                getWithAuth("/gate/client/" + IDENTIFIER + "/verify?token=" + jwt).build(),
+                HttpResponse.BodyHandlers.ofString());
 
-        assertThat(verifyResp.getStatusCode().value()).isEqualTo(200);
+        assertThat(verifyResp.statusCode()).isEqualTo(200);
     }
 
     @Test
-    void proxy_returns_502_on_upstream_error() {
+    void proxy_returns_502_on_upstream_error() throws Exception {
         ReflectionTestUtils.setField(proxyController, "authServerUrl", "http://127.0.0.1:1");
         try {
-            ResponseEntity<String> response = restTemplate.exchange(
-                    "/clients", HttpMethod.GET, new HttpEntity<>(authHeaders()), String.class);
+            HttpResponse<String> response = http.send(
+                    getWithAuth("/clients").build(), HttpResponse.BodyHandlers.ofString());
 
-            assertThat(response.getStatusCode().value()).isEqualTo(502);
+            assertThat(response.statusCode()).isEqualTo(502);
         } finally {
             String url = System.getenv("AUTH_SERVER_URL");
             String restore = (url != null && !url.isEmpty()) ? url : "http://host.docker.internal:8080/function/php";

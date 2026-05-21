@@ -21,6 +21,8 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
+          extensions: apcu
+          ini-values: apc.enable_cli=1
 
       - name: Install dependencies
         run: composer install
