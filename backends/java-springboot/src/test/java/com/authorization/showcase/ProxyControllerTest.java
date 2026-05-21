@@ -75,7 +75,7 @@ class ProxyControllerTest {
     @Test
     void clients_returns_json_array() throws Exception {
         HttpResponse<String> response = http.send(
-                getWithAuth("/clients?statuses[]=2").build(), HttpResponse.BodyHandlers.ofString());
+                getWithAuth("/clients?statuses%5B%5D=2").build(), HttpResponse.BodyHandlers.ofString());
 
         assertThat(response.statusCode()).isEqualTo(200);
         assertThat(response.body()).startsWith("[");
