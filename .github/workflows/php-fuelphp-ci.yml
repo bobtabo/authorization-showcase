@@ -29,3 +29,5 @@ jobs:
       - name: Run tests
         run: ./fuel/vendor/bin/phpunit -c fuel/core/phpunit.xml --testsuite app
         working-directory: backends/php-fuelphp
+        env:
+          AUTH_SERVER_URL: https://ample-precise-knee.ngrok-free.dev/function/php

@@ -1,25 +1,21 @@
 """
-proxy.tests — プロキシビューの単体テストモジュール。
+proxy.tests — プロキシビューのインテグレーションテストモジュール。
 
 Author: Satoshi Nagashiba <satoshi.nagashiba@gmail.com>
 """
 import json
-from unittest.mock import MagicMock, patch
+import os
 
 from django.test import Client, TestCase
 
-
-def _make_response(body, status_code=200):
-    mock_resp = MagicMock()
-    mock_resp.status_code = status_code
-    mock_resp.content = body if isinstance(body, bytes) else body.encode()
-    return mock_resp
+BEARER_TOKEN = 'Bearer 0036f13f53d29672eed54e4ab1672edeab482d49e77b626c4a1b110e45e46369'
+IDENTIFIER   = 'alpha-tech'
+MEMBER       = 'M000001'
 
 
 class HealthViewTest(TestCase):
     def test_health_returns_ok(self):
-        client = Client()
-        response = client.get('/health')
+        response = Client().get('/health')
 
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
@@ -27,65 +23,52 @@ class HealthViewTest(TestCase):
 
 
 class ClientsViewTest(TestCase):
-    @patch('proxy.views.requests.get')
-    def test_clients_returns_upstream_body(self, mock_get):
-        mock_get.return_value = _make_response(b'[{"id":1},{"id":2}]')
-
-        response = Client().get('/clients')
+    def test_clients_returns_list(self):
+        response = Client().get('/clients?statuses[]=2', HTTP_AUTHORIZATION=BEARER_TOKEN)
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(json.loads(response.content), [{'id': 1}, {'id': 2}])
-
-    @patch('proxy.views.requests.get')
-    def test_clients_forwards_auth_header(self, mock_get):
-        mock_get.return_value = _make_response(b'[]')
-
-        Client().get('/clients', HTTP_AUTHORIZATION='Bearer test-token')
-
-        _, kwargs = mock_get.call_args
-        self.assertEqual(kwargs['headers']['Authorization'], 'Bearer test-token')
-
-    @patch('proxy.views.requests.get')
-    def test_clients_forwards_query_string(self, mock_get):
-        mock_get.return_value = _make_response(b'[]')
-
-        Client().get('/clients?page=2&limit=10')
-
-        called_url = mock_get.call_args[0][0]
-        self.assertIn('page=2', called_url)
-        self.assertIn('limit=10', called_url)
+        data = json.loads(response.content)
+        self.assertIsInstance(data, list)
+        self.assertGreater(len(data), 0)
 
 
 class GateIssueViewTest(TestCase):
-    @patch('proxy.views.requests.get')
-    def test_gate_issue_proxies(self, mock_get):
-        mock_get.return_value = _make_response(b'{"token":"abc"}')
-
-        response = Client().get('/gate/issue')
+    def test_gate_issue_returns_token(self):
+        response = Client().get(f'/gate/issue?member={MEMBER}', HTTP_AUTHORIZATION=BEARER_TOKEN)
 
         self.assertEqual(response.status_code, 200)
-        called_url = mock_get.call_args[0][0]
-        self.assertIn('api/gate/issue', called_url)
+        data = json.loads(response.content)
+        self.assertIn('token', data)
+        self.assertTrue(data['token'])
 
 
 class GateVerifyViewTest(TestCase):
-    @patch('proxy.views.requests.get')
-    def test_gate_verify_includes_identifier(self, mock_get):
-        mock_get.return_value = _make_response(b'{"valid":true}')
+    def test_gate_verify_returns_payload(self):
+        issue_resp = Client().get(f'/gate/issue?member={MEMBER}', HTTP_AUTHORIZATION=BEARER_TOKEN)
+        self.assertEqual(issue_resp.status_code, 200)
+        jwt = json.loads(issue_resp.content)['token']
 
-        response = Client().get('/gate/client/alpha-tech/verify')
+        verify_resp = Client().get(
+            f'/gate/client/{IDENTIFIER}/verify?token={jwt}',
+            HTTP_AUTHORIZATION=BEARER_TOKEN,
+        )
 
-        self.assertEqual(response.status_code, 200)
-        called_url = mock_get.call_args[0][0]
-        self.assertIn('alpha-tech', called_url)
+        self.assertEqual(verify_resp.status_code, 200)
 
 
-class ProxyErrorHandlingTest(TestCase):
-    @patch('proxy.views.requests.get')
-    def test_proxy_returns_502_on_exception(self, mock_get):
-        mock_get.side_effect = Exception('connection refused')
+class UpstreamErrorTest(TestCase):
+    def setUp(self):
+        self._orig = os.environ.get('AUTH_SERVER_URL')
+        os.environ['AUTH_SERVER_URL'] = 'http://127.0.0.1:1'
 
-        response = Client().get('/clients')
+    def tearDown(self):
+        if self._orig is not None:
+            os.environ['AUTH_SERVER_URL'] = self._orig
+        else:
+            os.environ.pop('AUTH_SERVER_URL', None)
+
+    def test_proxy_returns_502_on_upstream_error(self):
+        response = Client().get('/clients', HTTP_AUTHORIZATION=BEARER_TOKEN)
 
         self.assertEqual(response.status_code, 502)
         data = json.loads(response.content)

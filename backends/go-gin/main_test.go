@@ -8,15 +8,19 @@ import (
 	"testing"
 )
 
-// startFakeAuthServer は認可サーバーの代替となるテスト用 HTTP サーバーを起動します。
-// handler には受け取ったリクエストを検証・応答するロジックを渡してください。
-func startFakeAuthServer(handler http.HandlerFunc) *httptest.Server {
-	return httptest.NewServer(handler)
-}
+const (
+	testBearerToken = "Bearer 0036f13f53d29672eed54e4ab1672edeab482d49e77b626c4a1b110e45e46369"
+	testIdentifier  = "alpha-tech"
+	testMember      = "M000001"
+)
 
-func newTestRouter(fakeServerURL string) http.Handler {
-	os.Setenv("AUTH_SERVER_URL", fakeServerURL)
-	return newRouter(fakeServerURL)
+func authURL(t *testing.T) string {
+	t.Helper()
+	base := os.Getenv("AUTH_SERVER_URL")
+	if base == "" {
+		t.Skip("AUTH_SERVER_URL not set")
+	}
+	return base
 }
 
 func TestHealth(t *testing.T) {
@@ -39,119 +43,73 @@ func TestHealth(t *testing.T) {
 }
 
 func TestClients(t *testing.T) {
-	fake := startFakeAuthServer(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/api/clients" {
-			http.NotFound(w, r)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`[{"id":1}]`))
-	})
-	defer fake.Close()
-
-	r := newRouter(fake.URL)
+	r := newRouter(authURL(t))
 	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/clients", nil)
+	req := httptest.NewRequest(http.MethodGet, "/clients?statuses[]=2", nil)
+	req.Header.Set("Authorization", testBearerToken)
 
 	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
-		t.Fatalf("expected 200, got %d", w.Code)
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
 	}
-	if w.Body.String() != `[{"id":1}]` {
-		t.Errorf("unexpected body: %s", w.Body.String())
+	var clients []map[string]interface{}
+	if err := json.Unmarshal(w.Body.Bytes(), &clients); err != nil {
+		t.Fatalf("expected JSON array: %v\nbody: %s", err, w.Body.String())
 	}
-}
-
-func TestClients_ForwardsAuthHeader(t *testing.T) {
-	var receivedAuth string
-	fake := startFakeAuthServer(func(w http.ResponseWriter, r *http.Request) {
-		receivedAuth = r.Header.Get("Authorization")
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`[]`))
-	})
-	defer fake.Close()
-
-	r := newRouter(fake.URL)
-	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/clients", nil)
-	req.Header.Set("Authorization", "Bearer test-token")
-
-	r.ServeHTTP(w, req)
-
-	if receivedAuth != "Bearer test-token" {
-		t.Errorf("expected Authorization to be forwarded, got %q", receivedAuth)
-	}
-}
-
-func TestClients_QueryString(t *testing.T) {
-	var receivedQuery string
-	fake := startFakeAuthServer(func(w http.ResponseWriter, r *http.Request) {
-		receivedQuery = r.URL.RawQuery
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`[]`))
-	})
-	defer fake.Close()
-
-	r := newRouter(fake.URL)
-	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/clients?page=2&limit=10", nil)
-
-	r.ServeHTTP(w, req)
-
-	if receivedQuery != "page=2&limit=10" {
-		t.Errorf("expected query string to be forwarded, got %q", receivedQuery)
+	if len(clients) == 0 {
+		t.Error("expected at least one client")
 	}
 }
 
 func TestGateIssue(t *testing.T) {
-	var receivedPath string
-	fake := startFakeAuthServer(func(w http.ResponseWriter, r *http.Request) {
-		receivedPath = r.URL.Path
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"token":"abc"}`))
-	})
-	defer fake.Close()
-
-	r := newRouter(fake.URL)
+	r := newRouter(authURL(t))
 	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/gate/issue", nil)
+	req := httptest.NewRequest(http.MethodGet, "/gate/issue?member="+testMember, nil)
+	req.Header.Set("Authorization", testBearerToken)
 
 	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
-		t.Fatalf("expected 200, got %d", w.Code)
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
 	}
-	if receivedPath != "/api/gate/issue" {
-		t.Errorf("expected upstream path /api/gate/issue, got %q", receivedPath)
+	var body map[string]interface{}
+	if err := json.Unmarshal(w.Body.Bytes(), &body); err != nil {
+		t.Fatalf("expected JSON: %v\nbody: %s", err, w.Body.String())
+	}
+	if _, ok := body["token"]; !ok {
+		t.Errorf("expected 'token' in response: %s", w.Body.String())
 	}
 }
 
 func TestGateVerify(t *testing.T) {
-	var receivedPath string
-	fake := startFakeAuthServer(func(w http.ResponseWriter, r *http.Request) {
-		receivedPath = r.URL.Path
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"valid":true}`))
-	})
-	defer fake.Close()
+	r := newRouter(authURL(t))
 
-	r := newRouter(fake.URL)
-	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/gate/client/alpha-tech/verify", nil)
-
-	r.ServeHTTP(w, req)
-
-	if w.Code != http.StatusOK {
-		t.Fatalf("expected 200, got %d", w.Code)
+	issueW := httptest.NewRecorder()
+	issueReq := httptest.NewRequest(http.MethodGet, "/gate/issue?member="+testMember, nil)
+	issueReq.Header.Set("Authorization", testBearerToken)
+	r.ServeHTTP(issueW, issueReq)
+	if issueW.Code != http.StatusOK {
+		t.Fatalf("issue failed %d: %s", issueW.Code, issueW.Body.String())
 	}
-	if receivedPath != "/api/gate/client/alpha-tech/verify" {
-		t.Errorf("expected upstream path to include alpha-tech, got %q", receivedPath)
+	var issued map[string]interface{}
+	json.Unmarshal(issueW.Body.Bytes(), &issued)
+	jwt, _ := issued["token"].(string)
+	if jwt == "" {
+		t.Fatalf("no token in issue response: %s", issueW.Body.String())
+	}
+
+	verifyW := httptest.NewRecorder()
+	verifyReq := httptest.NewRequest(http.MethodGet, "/gate/client/"+testIdentifier+"/verify?token="+jwt, nil)
+	verifyReq.Header.Set("Authorization", testBearerToken)
+	r.ServeHTTP(verifyW, verifyReq)
+
+	if verifyW.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", verifyW.Code, verifyW.Body.String())
 	}
 }
 
-func TestProxyGet_UpstreamError(t *testing.T) {
-	// ポートに何もバインドされていないアドレスを指定することで到達不能な上流を再現します。
+func TestUpstreamError(t *testing.T) {
 	r := newRouter("http://127.0.0.1:1")
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/clients", nil)

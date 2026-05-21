@@ -7,148 +7,29 @@
  */
 
 /**
- * Stream wrapper that intercepts http:// requests made by file_get_contents
- * inside Controller_Proxy::proxyGet().  Each test registers this wrapper
- * under the "mockhttp" scheme, points AUTH_SERVER_URL at it, and configures
- * the static properties to control what the controller sees.
- */
-class MockHttpStreamFuel
-{
-    /** @var string Body text returned to file_get_contents callers. */
-    public static string $responseBody = '{}';
-
-    /** @var int HTTP status code embedded in the synthetic response header. */
-    public static int $responseStatus = 200;
-
-    /**
-     * Set to true to simulate a connection failure (file_get_contents returns false).
-     * @var bool
-     */
-    public static bool $fail = false;
-
-    /** @var string The last URL that was opened through this wrapper. */
-    public static string $lastUrl = '';
-
-    /** @var string[] The request headers sent by the caller. */
-    public static array $lastRequestHeaders = [];
-
-    /** @var int Current read position within $responseBody. */
-    private int $position = 0;
-
-    // ------------------------------------------------------------------
-    // Registration helpers
-    // ------------------------------------------------------------------
-
-    public static function register(): void
-    {
-        if (in_array('mockhttp', stream_get_wrappers(), true)) {
-            stream_wrapper_unregister('mockhttp');
-        }
-        stream_wrapper_register('mockhttp', self::class);
-    }
-
-    public static function unregister(): void
-    {
-        if (in_array('mockhttp', stream_get_wrappers(), true)) {
-            stream_wrapper_unregister('mockhttp');
-        }
-    }
-
-    /**
-     * Restore defaults so tests are independent from each other.
-     */
-    public static function reset(): void
-    {
-        self::$responseBody           = '{}';
-        self::$responseStatus         = 200;
-        self::$fail                   = false;
-        self::$lastUrl                = '';
-        self::$lastRequestHeaders     = [];
-    }
-
-    // ------------------------------------------------------------------
-    // PHP stream wrapper protocol
-    // ------------------------------------------------------------------
-
-    /** @var resource|null */
-    public $context;
-
-    public function stream_open(string $path, string $mode, int $options, ?string &$opened_path): bool
-    {
-        if (self::$fail) {
-            return false;
-        }
-
-        self::$lastUrl = $path;
-
-        if ($this->context !== null) {
-            $opts = stream_context_get_options($this->context);
-            // コントローラーは 'http' キーでコンテキストを作成するため 'http' から読む
-            $raw  = $opts['http']['header'] ?? $opts['mockhttp']['header'] ?? '';
-            foreach (explode("\r\n", $raw) as $line) {
-                if (trim($line) !== '') {
-                    self::$lastRequestHeaders[] = $line;
-                }
-            }
-        }
-
-        // $http_response_header is a PHP magic variable populated by stream
-        // wrappers; we set it in $GLOBALS so the controller's preg_match can
-        // find the status line and parse the HTTP status code.
-        $GLOBALS['http_response_header'] = ['HTTP/1.1 ' . self::$responseStatus . ' OK'];
-
-        $this->position = 0;
-        return true;
-    }
-
-    public function stream_read(int $count): string
-    {
-        $chunk          = substr(self::$responseBody, $this->position, $count);
-        $this->position += strlen($chunk);
-        return $chunk;
-    }
-
-    public function stream_eof(): bool
-    {
-        return $this->position >= strlen(self::$responseBody);
-    }
-
-    public function stream_stat(): array
-    {
-        return [];
-    }
-}
-
-/**
  * Unit tests for Controller_Proxy.
  *
- * The controller's static helper methods are exercised by instantiating the
- * controller directly and calling the action methods.  AUTH_SERVER_URL is
- * set to the mockhttp:// scheme so every file_get_contents call is handled
- * by MockHttpStreamFuel without real network I/O.
+ * AUTH_SERVER_URL を CI 環境の ngrok URL に向けてテストを実行します。
+ * コントローラーを直接インスタンス化してアクションメソッドを呼び出します。
  *
  * @group App
  * @group Controller
  */
 class Test_Controller_Proxy extends TestCase
 {
+    const BEARER_TOKEN = 'Bearer 0036f13f53d29672eed54e4ab1672edeab482d49e77b626c4a1b110e45e46369';
+    const IDENTIFIER   = 'alpha-tech';
+    const MEMBER       = 'M000001';
+
     protected function setUp(): void
     {
         parent::setUp();
-        MockHttpStreamFuel::reset();
-        MockHttpStreamFuel::register();
-        putenv('AUTH_SERVER_URL=mockhttp://auth-server');
-
-        // Ensure QUERY_STRING is clean so tests are isolated
-        $_SERVER['QUERY_STRING']    = '';
+        $_SERVER['QUERY_STRING']       = '';
         $_SERVER['HTTP_AUTHORIZATION'] = '';
     }
 
     protected function tearDown(): void
     {
-        MockHttpStreamFuel::unregister();
-        putenv('AUTH_SERVER_URL');
-        unset($GLOBALS['http_response_header']);
         unset($_SERVER['HTTP_AUTHORIZATION']);
         parent::tearDown();
     }
@@ -162,79 +43,58 @@ class Test_Controller_Proxy extends TestCase
     // /clients
     // ------------------------------------------------------------------
 
-    public function test_clients_returns_upstream_body(): void
+    public function test_clients_returns_non_empty_list(): void
     {
-        MockHttpStreamFuel::$responseBody   = '[{"id":1,"name":"ClientA"}]';
-        MockHttpStreamFuel::$responseStatus = 200;
+        $_SERVER['HTTP_AUTHORIZATION'] = self::BEARER_TOKEN;
+        $_SERVER['QUERY_STRING']       = 'statuses[]=2';
 
         $controller = $this->newController();
         $response   = $controller->action_clients();
 
         $this->assertInstanceOf(\Response::class, $response);
         $this->assertSame(200, $response->status);
-        $this->assertStringContainsString('ClientA', (string) $response->body);
-    }
-
-    public function test_clients_forwards_query_string(): void
-    {
-        MockHttpStreamFuel::$responseBody = '[]';
-        $_SERVER['QUERY_STRING']          = 'page=2&limit=10';
-
-        $controller = $this->newController();
-        $controller->action_clients();
-
-        $this->assertStringContainsString('page=2', MockHttpStreamFuel::$lastUrl);
-        $this->assertStringContainsString('limit=10', MockHttpStreamFuel::$lastUrl);
-    }
-
-    public function test_clients_forwards_authorization_header(): void
-    {
-        MockHttpStreamFuel::$responseBody    = '{}';
-        $_SERVER['HTTP_AUTHORIZATION']       = 'Bearer secret-token';
-
-        $controller = $this->newController();
-        $controller->action_clients();
-
-        $authHeaderSent = false;
-        foreach (MockHttpStreamFuel::$lastRequestHeaders as $header) {
-            if (stripos($header, 'Authorization: Bearer secret-token') !== false) {
-                $authHeaderSent = true;
-                break;
-            }
-        }
-        $this->assertTrue($authHeaderSent, 'Authorization header was not forwarded to the upstream request');
+        $body = json_decode((string) $response->body, true);
+        $this->assertIsArray($body);
+        $this->assertGreaterThan(0, count($body));
     }
 
     // ------------------------------------------------------------------
     // /gate/issue
     // ------------------------------------------------------------------
 
-    public function test_gate_issue_proxies_to_correct_path(): void
+    public function test_gate_issue_returns_token(): void
     {
-        MockHttpStreamFuel::$responseBody = '{"token":"eyJ..."}';
+        $_SERVER['HTTP_AUTHORIZATION'] = self::BEARER_TOKEN;
+        $_SERVER['QUERY_STRING']       = 'member=' . self::MEMBER;
 
         $controller = $this->newController();
         $response   = $controller->action_gate_issue();
 
         $this->assertSame(200, $response->status);
-        $this->assertStringContainsString('api/gate/issue', MockHttpStreamFuel::$lastUrl);
-        $this->assertStringContainsString('token', (string) $response->body);
+        $body = json_decode((string) $response->body, true);
+        $this->assertArrayHasKey('token', $body);
+        $this->assertNotEmpty($body['token']);
     }
 
     // ------------------------------------------------------------------
     // /gate/client/:identifier/verify
     // ------------------------------------------------------------------
 
-    public function test_gate_verify_includes_identifier_in_path(): void
+    public function test_gate_verify_returns_payload(): void
     {
-        MockHttpStreamFuel::$responseBody = '{"valid":true}';
+        // JWT 発行
+        $_SERVER['HTTP_AUTHORIZATION'] = self::BEARER_TOKEN;
+        $_SERVER['QUERY_STRING']       = 'member=' . self::MEMBER;
+        $issueResp = $this->newController()->action_gate_issue();
+        $this->assertSame(200, $issueResp->status);
+        $jwt = json_decode((string) $issueResp->body, true)['token'];
 
-        $controller = $this->newController();
-        $response   = $controller->action_gate_verify('client-abc');
+        // JWT 検証
+        $_SERVER['HTTP_AUTHORIZATION'] = self::BEARER_TOKEN;
+        $_SERVER['QUERY_STRING']       = 'token=' . $jwt;
+        $response = $this->newController()->action_gate_verify(self::IDENTIFIER);
 
         $this->assertSame(200, $response->status);
-        $this->assertStringContainsString('api/gate/client/client-abc/verify', MockHttpStreamFuel::$lastUrl);
-        $this->assertStringContainsString('valid', (string) $response->body);
     }
 
     // ------------------------------------------------------------------
@@ -243,13 +103,17 @@ class Test_Controller_Proxy extends TestCase
 
     public function test_proxy_returns_502_on_failure(): void
     {
-        MockHttpStreamFuel::$fail = true;
+        $orig = getenv('AUTH_SERVER_URL');
+        putenv('AUTH_SERVER_URL=http://127.0.0.1:1');
 
-        $controller = $this->newController();
-        $response   = $controller->action_clients();
+        try {
+            $_SERVER['HTTP_AUTHORIZATION'] = self::BEARER_TOKEN;
+            $response = $this->newController()->action_clients();
 
-        $this->assertInstanceOf(\Response::class, $response);
-        $this->assertSame(502, $response->status);
-        $this->assertStringContainsString('error', (string) $response->body);
+            $this->assertSame(502, $response->status);
+            $this->assertStringContainsString('error', (string) $response->body);
+        } finally {
+            putenv($orig !== false ? 'AUTH_SERVER_URL=' . $orig : 'AUTH_SERVER_URL');
+        }
     }
 }

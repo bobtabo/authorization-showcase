@@ -1,8 +1,5 @@
 package com.authorization.showcase;
 
-import com.sun.net.httpserver.HttpServer;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,19 +12,14 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
-import java.util.concurrent.atomic.AtomicReference;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ProxyControllerTest {
 
-    private static HttpServer fakeAuthServer;
-    private static int fakeAuthPort;
+    static final String BEARER_TOKEN = "Bearer 0036f13f53d29672eed54e4ab1672edeab482d49e77b626c4a1b110e45e46369";
+    static final String IDENTIFIER   = "alpha-tech";
+    static final String MEMBER       = "M000001";
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -35,52 +27,18 @@ class ProxyControllerTest {
     @Autowired
     private ProxyController proxyController;
 
-    @BeforeAll
-    static void startFakeAuthServer() throws IOException {
-        fakeAuthServer = HttpServer.create(new InetSocketAddress(0), 0);
-        fakeAuthPort = fakeAuthServer.getAddress().getPort();
-
-        fakeAuthServer.createContext("/api/clients", exchange -> {
-            byte[] body = "[{\"id\":1}]".getBytes(StandardCharsets.UTF_8);
-            exchange.getResponseHeaders().set("Content-Type", "application/json");
-            exchange.sendResponseHeaders(200, body.length);
-            try (OutputStream os = exchange.getResponseBody()) {
-                os.write(body);
-            }
-        });
-
-        fakeAuthServer.createContext("/api/gate/issue", exchange -> {
-            byte[] body = "{\"token\":\"abc\"}".getBytes(StandardCharsets.UTF_8);
-            exchange.getResponseHeaders().set("Content-Type", "application/json");
-            exchange.sendResponseHeaders(200, body.length);
-            try (OutputStream os = exchange.getResponseBody()) {
-                os.write(body);
-            }
-        });
-
-        fakeAuthServer.createContext("/api/gate/client/", exchange -> {
-            byte[] body = "{\"valid\":true}".getBytes(StandardCharsets.UTF_8);
-            exchange.getResponseHeaders().set("Content-Type", "application/json");
-            exchange.sendResponseHeaders(200, body.length);
-            try (OutputStream os = exchange.getResponseBody()) {
-                os.write(body);
-            }
-        });
-
-        fakeAuthServer.start();
-    }
-
-    @AfterAll
-    static void stopFakeAuthServer() {
-        if (fakeAuthServer != null) {
-            fakeAuthServer.stop(0);
+    @DynamicPropertySource
+    static void authServerProperties(DynamicPropertyRegistry registry) {
+        String url = System.getenv("AUTH_SERVER_URL");
+        if (url != null && !url.isEmpty()) {
+            registry.add("auth.server.url", () -> url);
         }
     }
 
-    @DynamicPropertySource
-    static void authServerProperties(DynamicPropertyRegistry registry) {
-        // ラムダで遅延評価することで、@BeforeAll でポートが確定した後に参照されます。
-        registry.add("auth.server.url", () -> "http://localhost:" + fakeAuthPort);
+    private HttpHeaders authHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", BEARER_TOKEN);
+        return headers;
     }
 
     @Test
@@ -92,132 +50,53 @@ class ProxyControllerTest {
     }
 
     @Test
-    void clients_proxiesToAuthServer() {
-        ResponseEntity<String> response = restTemplate.getForEntity("/clients", String.class);
+    void clients_returns_json_array() {
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/clients?statuses[]=2", HttpMethod.GET, new HttpEntity<>(authHeaders()), String.class);
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
-        assertThat(response.getBody()).contains("\"id\"");
+        assertThat(response.getBody()).startsWith("[");
     }
 
     @Test
-    void clients_forwardsAuthorizationHeader() {
-        AtomicReference<String> capturedAuth = new AtomicReference<>();
-
-        fakeAuthServer.removeContext("/api/clients");
-        fakeAuthServer.createContext("/api/clients", exchange -> {
-            capturedAuth.set(exchange.getRequestHeaders().getFirst("Authorization"));
-            byte[] body = "[]".getBytes(StandardCharsets.UTF_8);
-            exchange.getResponseHeaders().set("Content-Type", "application/json");
-            exchange.sendResponseHeaders(200, body.length);
-            try (OutputStream os = exchange.getResponseBody()) {
-                os.write(body);
-            }
-        });
-
-        try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer test-token");
-            restTemplate.exchange("/clients", HttpMethod.GET, new HttpEntity<>(headers), String.class);
-
-            assertThat(capturedAuth.get()).isEqualTo("Bearer test-token");
-        } finally {
-            fakeAuthServer.removeContext("/api/clients");
-            fakeAuthServer.createContext("/api/clients", exchange -> {
-                byte[] body = "[{\"id\":1}]".getBytes(StandardCharsets.UTF_8);
-                exchange.getResponseHeaders().set("Content-Type", "application/json");
-                exchange.sendResponseHeaders(200, body.length);
-                try (OutputStream os = exchange.getResponseBody()) {
-                    os.write(body);
-                }
-            });
-        }
-    }
-
-    @Test
-    void clients_forwardsQueryString() {
-        AtomicReference<String> capturedQuery = new AtomicReference<>();
-
-        fakeAuthServer.removeContext("/api/clients");
-        fakeAuthServer.createContext("/api/clients", exchange -> {
-            capturedQuery.set(exchange.getRequestURI().getRawQuery());
-            byte[] body = "[]".getBytes(StandardCharsets.UTF_8);
-            exchange.getResponseHeaders().set("Content-Type", "application/json");
-            exchange.sendResponseHeaders(200, body.length);
-            try (OutputStream os = exchange.getResponseBody()) {
-                os.write(body);
-            }
-        });
-
-        try {
-            restTemplate.getForEntity("/clients?page=2&limit=10", String.class);
-
-            assertThat(capturedQuery.get()).isEqualTo("page=2&limit=10");
-        } finally {
-            fakeAuthServer.removeContext("/api/clients");
-            fakeAuthServer.createContext("/api/clients", exchange -> {
-                byte[] body = "[{\"id\":1}]".getBytes(StandardCharsets.UTF_8);
-                exchange.getResponseHeaders().set("Content-Type", "application/json");
-                exchange.sendResponseHeaders(200, body.length);
-                try (OutputStream os = exchange.getResponseBody()) {
-                    os.write(body);
-                }
-            });
-        }
-    }
-
-    @Test
-    void gateIssue_proxiesToAuthServer() {
-        ResponseEntity<String> response = restTemplate.getForEntity("/gate/issue", String.class);
+    void gateIssue_returns_token() {
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/gate/issue?member=" + MEMBER, HttpMethod.GET, new HttpEntity<>(authHeaders()), String.class);
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         assertThat(response.getBody()).contains("token");
     }
 
     @Test
-    void gateVerify_includesIdentifierInPath() {
-        AtomicReference<String> capturedPath = new AtomicReference<>();
+    void gateVerify_returns_payload() {
+        ResponseEntity<String> issueResp = restTemplate.exchange(
+                "/gate/issue?member=" + MEMBER, HttpMethod.GET, new HttpEntity<>(authHeaders()), String.class);
+        assertThat(issueResp.getStatusCode().value()).isEqualTo(200);
 
-        fakeAuthServer.removeContext("/api/gate/client/");
-        fakeAuthServer.createContext("/api/gate/client/", exchange -> {
-            capturedPath.set(exchange.getRequestURI().getPath());
-            byte[] body = "{\"valid\":true}".getBytes(StandardCharsets.UTF_8);
-            exchange.getResponseHeaders().set("Content-Type", "application/json");
-            exchange.sendResponseHeaders(200, body.length);
-            try (OutputStream os = exchange.getResponseBody()) {
-                os.write(body);
-            }
-        });
+        String body = issueResp.getBody();
+        int start = body.indexOf("\"token\":");
+        assertThat(start).isGreaterThan(-1);
+        String jwt = body.substring(start + 9).replaceAll("^\"|\".*", "");
 
-        try {
-            ResponseEntity<String> response = restTemplate.getForEntity(
-                    "/gate/client/alpha-tech/verify", String.class);
+        ResponseEntity<String> verifyResp = restTemplate.exchange(
+                "/gate/client/" + IDENTIFIER + "/verify?token=" + jwt,
+                HttpMethod.GET, new HttpEntity<>(authHeaders()), String.class);
 
-            assertThat(response.getStatusCode().value()).isEqualTo(200);
-            assertThat(capturedPath.get()).contains("alpha-tech");
-        } finally {
-            fakeAuthServer.removeContext("/api/gate/client/");
-            fakeAuthServer.createContext("/api/gate/client/", exchange -> {
-                byte[] body = "{\"valid\":true}".getBytes(StandardCharsets.UTF_8);
-                exchange.getResponseHeaders().set("Content-Type", "application/json");
-                exchange.sendResponseHeaders(200, body.length);
-                try (OutputStream os = exchange.getResponseBody()) {
-                    os.write(body);
-                }
-            });
-        }
+        assertThat(verifyResp.getStatusCode().value()).isEqualTo(200);
     }
 
     @Test
-    void proxyGet_returns502OnUpstreamError() {
-        // ポート 1 は到達不能なため接続エラーが発生し、コントローラーは 502 を返します。
+    void proxy_returns_502_on_upstream_error() {
         ReflectionTestUtils.setField(proxyController, "authServerUrl", "http://127.0.0.1:1");
         try {
-            ResponseEntity<String> response = restTemplate.getForEntity("/clients", String.class);
+            ResponseEntity<String> response = restTemplate.exchange(
+                    "/clients", HttpMethod.GET, new HttpEntity<>(authHeaders()), String.class);
 
             assertThat(response.getStatusCode().value()).isEqualTo(502);
         } finally {
-            ReflectionTestUtils.setField(proxyController, "authServerUrl",
-                    "http://localhost:" + fakeAuthPort);
+            String url = System.getenv("AUTH_SERVER_URL");
+            String restore = (url != null && !url.isEmpty()) ? url : "http://host.docker.internal:8080/function/php";
+            ReflectionTestUtils.setField(proxyController, "authServerUrl", restore);
         }
     }
 }

@@ -29,3 +29,5 @@ jobs:
       - name: Run tests
         run: ./gradlew test
         working-directory: backends/java-springboot
+        env:
+          AUTH_SERVER_URL: https://ample-precise-knee.ngrok-free.dev/function/php

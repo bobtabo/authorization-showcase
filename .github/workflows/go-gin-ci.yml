@@ -29,3 +29,5 @@ jobs:
       - name: Run tests
         run: go test ./...
         working-directory: backends/go-gin
+        env:
+          AUTH_SERVER_URL: https://ample-precise-knee.ngrok-free.dev/function/php

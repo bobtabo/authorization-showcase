@@ -29,3 +29,5 @@ jobs:
       - name: Run tests
         run: ./vendor/bin/phpunit
         working-directory: backends/php-cakephp
+        env:
+          AUTH_SERVER_URL: https://ample-precise-knee.ngrok-free.dev/function/php

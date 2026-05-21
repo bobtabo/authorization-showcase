@@ -45,6 +45,7 @@ class ProxyController < ApplicationController
     uri = URI("#{auth_server_url}/#{path}#{query.present? ? "?#{query}" : ''}")
 
     http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = uri.scheme == 'https'
     req = Net::HTTP::Get.new(uri)
     req['Accept'] = 'application/json'
     auth = request.headers['Authorization']

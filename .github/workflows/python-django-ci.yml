@@ -29,3 +29,5 @@ jobs:
       - name: Run tests
         run: python manage.py test
         working-directory: backends/python-django
+        env:
+          AUTH_SERVER_URL: https://ample-precise-knee.ngrok-free.dev/function/php
