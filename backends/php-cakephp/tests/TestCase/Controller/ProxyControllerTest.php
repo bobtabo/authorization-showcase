@@ -93,7 +93,10 @@ class ProxyControllerTest extends TestCase
 
     public function testProxyReturns502OnFailure(): void
     {
-        $orig = getenv('AUTH_SERVER_URL');
+        // CakePHP の env() は $_ENV → $_SERVER → getenv() の順に参照するため全て上書きする
+        $orig = $_ENV['AUTH_SERVER_URL'] ?? getenv('AUTH_SERVER_URL') ?: null;
+        $_ENV['AUTH_SERVER_URL']    = 'http://127.0.0.1:1';
+        $_SERVER['AUTH_SERVER_URL'] = 'http://127.0.0.1:1';
         putenv('AUTH_SERVER_URL=http://127.0.0.1:1');
 
         try {
@@ -103,7 +106,14 @@ class ProxyControllerTest extends TestCase
             $this->assertResponseCode(502);
             $this->assertResponseContains('error');
         } finally {
-            putenv($orig !== false ? 'AUTH_SERVER_URL=' . $orig : 'AUTH_SERVER_URL');
+            if ($orig !== null) {
+                $_ENV['AUTH_SERVER_URL']    = $orig;
+                $_SERVER['AUTH_SERVER_URL'] = $orig;
+                putenv('AUTH_SERVER_URL=' . $orig);
+            } else {
+                unset($_ENV['AUTH_SERVER_URL'], $_SERVER['AUTH_SERVER_URL']);
+                putenv('AUTH_SERVER_URL');
+            }
         }
     }
 }

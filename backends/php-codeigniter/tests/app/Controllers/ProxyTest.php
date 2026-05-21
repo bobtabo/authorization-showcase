@@ -89,7 +89,10 @@ class ProxyTest extends CIUnitTestCase
 
     public function testProxyReturns502OnFailure(): void
     {
-        $orig = getenv('AUTH_SERVER_URL');
+        // CI4 の env() は $_ENV → $_SERVER → getenv() の順に参照するため全て上書きする
+        $orig = $_ENV['AUTH_SERVER_URL'] ?? getenv('AUTH_SERVER_URL') ?: null;
+        $_ENV['AUTH_SERVER_URL']    = 'http://127.0.0.1:1';
+        $_SERVER['AUTH_SERVER_URL'] = 'http://127.0.0.1:1';
         putenv('AUTH_SERVER_URL=http://127.0.0.1:1');
 
         try {
@@ -99,7 +102,14 @@ class ProxyTest extends CIUnitTestCase
             $result->assertStatus(502);
             $this->assertStringContainsString('error', (string) $result->response()->getBody());
         } finally {
-            putenv($orig !== false ? 'AUTH_SERVER_URL=' . $orig : 'AUTH_SERVER_URL');
+            if ($orig !== null) {
+                $_ENV['AUTH_SERVER_URL']    = $orig;
+                $_SERVER['AUTH_SERVER_URL'] = $orig;
+                putenv('AUTH_SERVER_URL=' . $orig);
+            } else {
+                unset($_ENV['AUTH_SERVER_URL'], $_SERVER['AUTH_SERVER_URL']);
+                putenv('AUTH_SERVER_URL');
+            }
         }
     }
 }
