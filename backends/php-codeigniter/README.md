@@ -1,69 +1,69 @@
-# CodeIgniter 4 Application Starter
+<p align="center">
+<a href="https://www.php.net/" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/php/php-original.svg" height="72" alt="PHP"></a>
+&nbsp;&nbsp;
+<a href="https://codeigniter.com/" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/codeigniter/codeigniter-plain.svg" height="72" alt="CodeIgniter"></a>
+</p>
 
-## What is CodeIgniter?
+<p align="center">
+<a href="https://www.php.net/"><img src="https://img.shields.io/badge/PHP-8.3-777BB4?logo=php&logoColor=white" alt="PHP 8.3"></a>
+<a href="https://codeigniter.com/"><img src="https://img.shields.io/badge/CodeIgniter-4.7-EF4223?logo=codeigniter&logoColor=white" alt="CodeIgniter 4.7"></a>
+</p>
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+---
 
-This repository holds a composer-installable app starter.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+## :book: 概要
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+認可サーバー API（JWT 発行・検証）を利用する **PHP + CodeIgniter 4** 実装のショーケースです。  
+フロントエンドからのリクエストを認可サーバー（`AUTH_SERVER_URL`）に転送し、JWT 発行・検証を行います。
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+---
 
-## Installation & updates
+## :package: 技術スタック
 
-`composer create-project codeigniter4/appstarter` then `composer update` whenever
-there is a new release of the framework.
+| 項目 | バージョン |
+|:----|:---------|
+| PHP | 8.3 |
+| CodeIgniter | 4.7 |
+| PHPUnit | 10.x |
 
-When updating, check the release notes to see if there are any changes you might need to apply
-to your `app` folder. The affected files can be copied or merged from
-`vendor/codeigniter4/framework/app`.
+---
 
-## Setup
+## :rocket: セットアップ
 
-Copy `env` to `.env` and tailor for your app, specifically the baseURL
-and any database settings.
+### Docker で起動
 
-## Important Change with index.php
+```bash
+cd docker
+bin/docker-php-codeigniter.sh up
+bin/docker-php-codeigniter.sh exec
+cp .env.example .env
+```
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+---
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+## :white_check_mark: テスト
 
-**Please** read the user guide for a better explanation of how CI4 works!
+```bash
+# 依存パッケージインストール
+composer install
 
-## Repository Management
+# テスト実行
+AUTH_SERVER_URL=https://<ngrok-url>/function/php ./vendor/bin/phpunit
+```
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
+テストは `AUTH_SERVER_URL` で指定した認可サーバーに対して実際にリクエストを送るインテグレーションテストです。
 
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
+---
 
-## Server Requirements
+## :gear: 環境変数
 
-PHP version 8.2 or higher is required, with the following extensions installed:
+| 変数名 | デフォルト値 | 説明 |
+|:------|:-----------|:----|
+| `AUTH_SERVER_URL` | `http://host.docker.internal:8080/function/php` | 転送先認可サーバーの URL |
 
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
+---
 
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - The end of life date for PHP 8.1 was December 31, 2025.
-> - If you are still using below PHP 8.2, you should upgrade immediately.
-> - The end of life date for PHP 8.2 will be December 31, 2026.
+## :link: リンク
 
-Additionally, make sure that the following extensions are enabled in your PHP:
-
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
+- [バックエンド一覧](../README.md)
+- [リポジトリルート](../../README.md)
