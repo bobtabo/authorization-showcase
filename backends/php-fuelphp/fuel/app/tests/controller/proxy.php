@@ -152,6 +152,11 @@ class Test_Controller_Proxy extends TestCase
         parent::tearDown();
     }
 
+    private function newController(): \Controller_Proxy
+    {
+        return new \Controller_Proxy($this->createStub(\Request::class));
+    }
+
     // ------------------------------------------------------------------
     // /clients
     // ------------------------------------------------------------------
@@ -161,7 +166,7 @@ class Test_Controller_Proxy extends TestCase
         MockHttpStreamFuel::$responseBody   = '[{"id":1,"name":"ClientA"}]';
         MockHttpStreamFuel::$responseStatus = 200;
 
-        $controller = new Controller_Proxy();
+        $controller = $this->newController();
         $response   = $controller->action_clients();
 
         $this->assertInstanceOf(\Response::class, $response);
@@ -174,7 +179,7 @@ class Test_Controller_Proxy extends TestCase
         MockHttpStreamFuel::$responseBody = '[]';
         $_SERVER['QUERY_STRING']          = 'page=2&limit=10';
 
-        $controller = new Controller_Proxy();
+        $controller = $this->newController();
         $controller->action_clients();
 
         $this->assertStringContainsString('page=2', MockHttpStreamFuel::$lastUrl);
@@ -186,7 +191,7 @@ class Test_Controller_Proxy extends TestCase
         MockHttpStreamFuel::$responseBody    = '{}';
         $_SERVER['HTTP_AUTHORIZATION']       = 'Bearer secret-token';
 
-        $controller = new Controller_Proxy();
+        $controller = $this->newController();
         $controller->action_clients();
 
         $authHeaderSent = false;
@@ -207,7 +212,7 @@ class Test_Controller_Proxy extends TestCase
     {
         MockHttpStreamFuel::$responseBody = '{"token":"eyJ..."}';
 
-        $controller = new Controller_Proxy();
+        $controller = $this->newController();
         $response   = $controller->action_gate_issue();
 
         $this->assertSame(200, $response->status);
@@ -223,7 +228,7 @@ class Test_Controller_Proxy extends TestCase
     {
         MockHttpStreamFuel::$responseBody = '{"valid":true}';
 
-        $controller = new Controller_Proxy();
+        $controller = $this->newController();
         $response   = $controller->action_gate_verify('client-abc');
 
         $this->assertSame(200, $response->status);
@@ -239,7 +244,7 @@ class Test_Controller_Proxy extends TestCase
     {
         MockHttpStreamFuel::$fail = true;
 
-        $controller = new Controller_Proxy();
+        $controller = $this->newController();
         $response   = $controller->action_clients();
 
         $this->assertInstanceOf(\Response::class, $response);
