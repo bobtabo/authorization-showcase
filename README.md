@@ -13,7 +13,7 @@
   - [前提](#前提)
   - [1. リポジトリのクローン](#1-リポジトリのクローン)
   - [2. 初回セットアップ](#2-初回セットアップ)
-  - [3. 共通コンテナの起動](#3-共通コンテナの起動nginx-proxy--mysql--redis--lambda--mailpit)
+  - [3. 共通コンテナの起動](#3-共通コンテナの起動nginx-proxy)
   - [4. バックエンドコンテナの起動](#4-バックエンドコンテナの起動)
   - [5. フロントエンドの起動](#5-フロントエンドの起動)
   - [6. バックエンドの初期設定](#6-バックエンドの初期設定)
@@ -60,10 +60,7 @@
 
 ### 前提
 
-- Docker Engine / Docker Compose がインストール済みであること
-- ポート `443`（プロキシ）、`3306`（MySQL）、`6379`（Redis）、`9000`（Lambda）、`8080`（API Gateway エミュレータ）、`8025`（MailPit）がローカルで空いていること
-- Google OAuth 2.0 のクライアント ID / シークレットを取得済みであること（<a href="https://console.cloud.google.com/">Google Cloud Console</a>）
-- GitHub OAuth App のクライアント ID / シークレットを取得済みであること（<a href="https://github.com/settings/developers">GitHub Developer Settings</a>）
+- [認可サーバー](https://github.com/bobtabo/authorization) 環境が起動していること
 
 ### 1. リポジトリのクローン
 
@@ -80,7 +77,7 @@ find ./bin -type f -exec chmod 755 {} +
 bin/docker-environment.sh
 ```
 
-### 3. 共通コンテナの起動（Nginx Proxy / MySQL / Redis / Lambda / MailPit）
+### 3. 共通コンテナの起動（Nginx Proxy）
 
 ```bash
 bin/docker-common.sh up
