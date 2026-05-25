@@ -1,11 +1,11 @@
 <p align="center">
-<a href="https://www.php.net/" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/php/php-original.svg" height="72" alt="PHP"></a>
+<a href="https://www.php.net/releases/7_4_0.php" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/php/php-original.svg" height="72" alt="PHP"></a>
 &nbsp;&nbsp;
 <a href="https://fuelphp.com/" target="_blank"><img src="https://avatars.githubusercontent.com/u/1149176" height="72" alt="FuelPHP"></a>
 </p>
 
 <p align="center">
-<a href="https://www.php.net/"><img src="https://img.shields.io/badge/PHP-7.4-777BB4?logo=php&logoColor=white" alt="PHP 7.4"></a>
+<a href="https://www.php.net/releases/7_4_0.php"><img src="https://img.shields.io/badge/PHP-7.4-777BB4?logo=php&logoColor=white" alt="PHP 7.4"></a>
 <a href="https://fuelphp.com/"><img src="https://img.shields.io/badge/FuelPHP-1.9-orange" alt="FuelPHP 1.9"></a>
 </p>
 

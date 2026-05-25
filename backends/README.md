@@ -53,7 +53,7 @@
 </tr>
 <tr>
 <td align="center"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/php/php-original.svg" width="32" height="32" alt="PHP"></td>
-<td><a href="https://www.php.net/"><b>PHP 7.4</b></a> + <a href="https://fuelphp.com/"><b>FuelPHP</b></a></td>
+<td><a href="https://www.php.net/releases/7_4_0.php"><b>PHP 7.4</b></a> + <a href="https://fuelphp.com/"><b>FuelPHP</b></a></td>
 <td><a href="php-fuelphp/"><code>php-fuelphp/</code></a></td>
 <td><a href="php-fuelphp/README.md">README.md</a></td>
 <td align="center">✅ 完了</td>
