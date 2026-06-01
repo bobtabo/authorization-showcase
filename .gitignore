@@ -9,3 +9,8 @@
 /backends/go-gin/tmp/
 /backends/java-springboot/.gradle/
 /backends/java-springboot/build/
+
+# TLS certificates and private keys
+*.key
+*.pem
+!docker/local/common/proxy/certs/dhparam.pem

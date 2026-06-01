@@ -25,9 +25,9 @@
 return array(
 	'default' => array(
 		'connection' => array(
-			'dsn'      => 'mysql:host=localhost;dbname=fuel_test',
-			'username' => 'fuel_app',
-			'password' => 'super_secret_password',
+			'dsn'      => 'mysql:host=' . (getenv('DB_HOST') ?: 'localhost') . ';dbname=' . (getenv('DB_NAME') ?: 'fuel_test'),
+			'username' => getenv('DB_USERNAME') ?: 'fuel_app',
+			'password' => getenv('DB_PASSWORD') ?: '',
 		),
 	),
 );
