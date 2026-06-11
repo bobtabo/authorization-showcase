@@ -22,7 +22,7 @@
 return array(
 	'default' => array(
 		'connection' => array(
-			'dsn'      => 'mysql:host=' . getenv('DB_HOST') . ';dbname=' . (getenv('DB_NAME') ?: 'fuel_staging'),
+			'dsn'      => 'mysql:host=' . (getenv('DB_HOST') ?: 'localhost') . ';dbname=' . (getenv('DB_NAME') ?: 'fuel_staging'),
 			'username' => getenv('DB_USERNAME') ?: 'fuel_app',
 			'password' => getenv('DB_PASSWORD') ?: '',
 		),

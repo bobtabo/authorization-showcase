@@ -24,6 +24,7 @@ services:
       - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
       - CERT_NAME=default
       - HTTPS_METHOD=noredirect
+      - CORS_ALLOWED_ORIGIN=${CORS_ALLOWED_ORIGIN:-http://localhost:5173}
     networks:
       - showcase
 
