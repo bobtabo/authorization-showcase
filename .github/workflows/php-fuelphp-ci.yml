@@ -4,8 +4,8 @@ name: PHP（FuelPHP）CI
 
 on:
   push:
-    branches:
-      - develop
+    branches-ignore:
+      - 'feature/issue-*'
     paths:
       - 'backends/php-fuelphp/**'
   workflow_dispatch:

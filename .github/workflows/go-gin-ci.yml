@@ -4,8 +4,8 @@ name: Go（Gin）CI
 
 on:
   push:
-    branches:
-      - develop
+    branches-ignore:
+      - 'feature/issue-*'
     paths:
       - 'backends/go-gin/**'
   workflow_dispatch:

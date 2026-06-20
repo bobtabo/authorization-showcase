@@ -4,8 +4,8 @@ name: Ruby（Rails）CI
 
 on:
   push:
-    branches:
-      - develop
+    branches-ignore:
+      - 'feature/issue-*'
     paths:
       - 'backends/ruby-rails/**'
   workflow_dispatch:

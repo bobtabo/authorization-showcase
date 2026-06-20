@@ -4,8 +4,8 @@ name: Java（Spring Boot）CI
 
 on:
   push:
-    branches:
-      - develop
+    branches-ignore:
+      - 'feature/issue-*'
     paths:
       - 'backends/java-springboot/**'
   workflow_dispatch:

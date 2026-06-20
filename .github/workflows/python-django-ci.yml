@@ -4,8 +4,8 @@ name: Python（Django）CI
 
 on:
   push:
-    branches:
-      - develop
+    branches-ignore:
+      - 'feature/issue-*'
     paths:
       - 'backends/python-django/**'
   workflow_dispatch:
