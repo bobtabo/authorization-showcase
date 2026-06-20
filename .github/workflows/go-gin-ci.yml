@@ -30,4 +30,4 @@ jobs:
         run: go test ./...
         working-directory: backends/go-gin
         env:
-          AUTH_SERVER_URL: https://ample-precise-knee.ngrok-free.dev/function/php
+          AUTH_SERVER_URL: https://ample-precise-knee.ngrok-free.dev/restapis/{api-id}/local/_user_request_

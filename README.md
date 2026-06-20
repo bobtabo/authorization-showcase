@@ -60,7 +60,7 @@
 
 ### 前提
 
-- [認可サーバー](https://github.com/bobtabo/authorization) 環境が起動していること
+- [認可サーバー](https://github.com/bobtabo/authorization) が **localstack モード**で起動していること（`BACKEND_MODE=localstack` がデフォルト）
 
 ### 1. リポジトリのクローン
 

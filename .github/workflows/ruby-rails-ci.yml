@@ -28,4 +28,4 @@ jobs:
         run: bundle exec rails test test/controllers/
         working-directory: backends/ruby-rails
         env:
-          AUTH_SERVER_URL: https://ample-precise-knee.ngrok-free.dev/function/php
+          AUTH_SERVER_URL: https://ample-precise-knee.ngrok-free.dev/restapis/{api-id}/local/_user_request_

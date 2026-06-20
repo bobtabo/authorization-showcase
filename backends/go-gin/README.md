@@ -47,7 +47,7 @@ cp .env.example .env
 go mod download
 
 # テスト実行
-AUTH_SERVER_URL=https://<ngrok-url>/function/php go test ./...
+AUTH_SERVER_URL=https://ample-precise-knee.ngrok-free.dev/restapis/{api-id}/local/_user_request_ go test ./...
 ```
 
 テストは `AUTH_SERVER_URL` で指定した認可サーバーに対して実際にリクエストを送るインテグレーションテストです。  
@@ -59,7 +59,7 @@ AUTH_SERVER_URL=https://<ngrok-url>/function/php go test ./...
 
 | 変数名 | デフォルト値 | 説明 |
 |:------|:-----------|:----|
-| `AUTH_SERVER_URL` | `http://host.docker.internal:8080/function/php` | 転送先認可サーバーの URL |
+| `AUTH_SERVER_URL` | `http://localstack:4566/restapis/{api-id}/local/_user_request_` | 転送先認可サーバーの URL |
 
 ---
 
