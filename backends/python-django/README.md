@@ -63,7 +63,7 @@ AUTH_SERVER_URL=https://ample-precise-knee.ngrok-free.dev/restapis/{api-id}/loca
 
 | 変数名 | デフォルト値 | 説明 |
 |:------|:-----------|:----|
-| `AUTH_SERVER_URL` | `http://localstack:4566/restapis/{api-id}/local/_user_request_` | 転送先認可サーバーの URL |
+| `AUTH_SERVER_URL` | `http://host.docker.internal:4566/restapis/{api-id}/local/_user_request_` | 転送先認可サーバーの URL |
 
 ---
 

@@ -35,5 +35,7 @@ services:
       - ./../../../backends/go-gin:/var/www/${APP_NAME}
     working_dir: /var/www/${APP_NAME}
     command: air
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     networks:
       - showcase

@@ -37,6 +37,8 @@ services:
       - java_gradle:/var/www/${APP_NAME}/.gradle
     working_dir: /var/www/${APP_NAME}
     command: ./gradlew bootRun
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     networks:
       - showcase
 

@@ -37,5 +37,7 @@ services:
     command: >
       sh -c "bundle install --quiet &&
              bundle exec puma -b tcp://0.0.0.0:3000"
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     networks:
       - showcase
