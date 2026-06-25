@@ -33,7 +33,9 @@ services:
       - '${RB_RAILS_DEBUG_PORT}:1234'
     volumes:
       - ./../../../backends/ruby-rails:/var/www/${APP_NAME}
+      - ./../entrypoint.sh:/entrypoint.sh
     working_dir: /var/www/${APP_NAME}
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
     command: >
       sh -c "bundle install --quiet &&
              bundle exec puma -b tcp://0.0.0.0:3000"

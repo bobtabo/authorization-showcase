@@ -33,7 +33,9 @@ services:
       - '${GO_DEBUG_PORT}:2345'
     volumes:
       - ./../../../backends/go-gin:/var/www/${APP_NAME}
+      - ./../entrypoint.sh:/entrypoint.sh
     working_dir: /var/www/${APP_NAME}
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
     command: air
     extra_hosts:
       - 'host.docker.internal:host-gateway'
