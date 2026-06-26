@@ -63,6 +63,14 @@
 - [認可サーバー](https://github.com/bobtabo/authorization) が **localstack モード**で起動していること（`BACKEND_MODE=localstack` がデフォルト）
 - [AWS CLI](https://docs.aws.amazon.com/ja_jp/cli/latest/userguide/getting-started-install.html) がインストール済みで、LocalStack 用プロファイル（`localstack`）が設定済みであること
 
+  ```bash
+  aws configure --profile localstack
+  # AWS Access Key ID: test
+  # AWS Secret Access Key: test
+  # Default region name: ap-northeast-1
+  # Default output format: json
+  ```
+
 ### 1. リポジトリのクローン
 
 ```bash
