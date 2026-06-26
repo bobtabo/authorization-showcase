@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # tflocal apply 後に LocalStack から API Gateway ID を取得し、
-# docker/local/.env.local を生成するスクリプト
+# docker/local/.env を生成するスクリプト
 #
 # 使い方:
 #   bash scripts/setup-local-env.sh [--profile <profile>]
