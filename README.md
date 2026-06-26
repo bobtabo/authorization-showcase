@@ -60,7 +60,18 @@
 
 ### 前提
 
-- [認可サーバー](https://github.com/bobtabo/authorization) 環境が起動していること
+- [認可サーバー](https://github.com/bobtabo/authorization) が **localstack モード**で起動していること（`BACKEND_MODE=localstack` がデフォルト）
+- [AWS CLI](https://docs.aws.amazon.com/ja_jp/cli/latest/userguide/getting-started-install.html) がインストール済みで、LocalStack 用プロファイル（`localstack`）が設定済みであること
+
+  > [!NOTE]
+  > LocalStack 用のプロファイル設定：
+  > ```bash
+  > aws configure --profile localstack
+  > # AWS Access Key ID: test
+  > # AWS Secret Access Key: test
+  > # Default region name: ap-northeast-1
+  > # Default output format: json
+  > ```
 
 ### 1. リポジトリのクローン
 
@@ -75,6 +86,12 @@ cd authorization-showcase
 cd docker
 find ./bin -type f -exec chmod 755 {} +
 bin/docker-environment.sh
+```
+
+認可サーバーの API Gateway ID を取得して環境ファイルを生成します。
+
+```bash
+bash scripts/setup-local-env.sh
 ```
 
 ### 3. 共通コンテナの起動（Nginx Proxy）

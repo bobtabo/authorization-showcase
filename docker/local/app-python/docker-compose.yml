@@ -33,9 +33,16 @@ services:
       - '${PYTHON_DEBUG_PORT}:5678'
     volumes:
       - ./../../../backends/python-django:/var/www/${APP_NAME}
+      - ./../entrypoint.sh:/entrypoint.sh
     working_dir: /var/www/${APP_NAME}
+    env_file:
+      - path: ./../.env
+        required: false
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
     command: >
       sh -c "pip install -r requirements.txt -q &&
              python manage.py runserver 0.0.0.0:8000"
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     networks:
       - showcase

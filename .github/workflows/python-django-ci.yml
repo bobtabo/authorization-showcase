@@ -4,8 +4,8 @@ name: Python（Django）CI
 
 on:
   push:
-    branches:
-      - develop
+    branches-ignore:
+      - 'feature/issue-*'
     paths:
       - 'backends/python-django/**'
   workflow_dispatch:
@@ -30,4 +30,4 @@ jobs:
         run: python manage.py test
         working-directory: backends/python-django
         env:
-          AUTH_SERVER_URL: https://ample-precise-knee.ngrok-free.dev/function/php
+          AUTH_SERVER_URL: https://ample-precise-knee.ngrok-free.dev/restapis/{api-id}/local/_user_request_

@@ -35,8 +35,15 @@ services:
       - ./../../../backends/java-springboot:/var/www/${APP_NAME}
       - java_build:/var/www/${APP_NAME}/build
       - java_gradle:/var/www/${APP_NAME}/.gradle
+      - ./../entrypoint.sh:/entrypoint.sh
     working_dir: /var/www/${APP_NAME}
+    env_file:
+      - path: ./../.env
+        required: false
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
     command: ./gradlew bootRun
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     networks:
       - showcase
 

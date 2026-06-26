@@ -4,6 +4,7 @@ FROM php:7.4-fpm
 RUN apt-get update
 RUN apt-get install -y \
       sudo \
+      curl \
       libpq-dev \
       libonig-dev \
       git \
