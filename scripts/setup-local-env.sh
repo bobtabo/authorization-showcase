@@ -16,7 +16,7 @@ ENDPOINT="http://localhost:4566"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-ENV_FILE="${ROOT_DIR}/docker/local/.env.local"
+ENV_FILE="${ROOT_DIR}/docker/local/.env"
 
 echo "🔍 LocalStack から API Gateway ID を取得中..."
 

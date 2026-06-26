@@ -5,7 +5,7 @@
 .aider*
 .env
 docker/local/common/.env
-docker/local/.env.local
+docker/local/.env
 .claude/
 /backends/go-gin/tmp/
 /backends/java-springboot/.gradle/
