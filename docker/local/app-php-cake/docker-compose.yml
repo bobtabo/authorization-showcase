@@ -1,3 +1,5 @@
+name: showcase-app-php-cake
+
 networks:
   showcase:
     external: true

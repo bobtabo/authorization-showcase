@@ -1,3 +1,5 @@
+name: showcase-app-ruby
+
 networks:
   showcase:
     external: true

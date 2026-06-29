@@ -1,3 +1,5 @@
+name: showcase-common
+
 networks:
   showcase:
     external: true

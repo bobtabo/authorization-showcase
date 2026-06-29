@@ -1,3 +1,5 @@
+name: showcase-app-java
+
 networks:
   showcase:
     external: true
