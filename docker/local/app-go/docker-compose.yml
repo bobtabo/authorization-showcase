@@ -1,3 +1,5 @@
+name: showcase-app-go
+
 networks:
   showcase:
     external: true

@@ -1,3 +1,5 @@
+name: showcase-app-php-codeigniter
+
 networks:
   showcase:
     external: true
