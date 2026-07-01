@@ -2,13 +2,13 @@
 import { KeyRound, ShieldCheck } from '@lucide/vue'
 
 const BACKEND_MAP: Record<string, string> = {
-  'Go（Gin）': 'http://localhost:18080',
-  'Java（Spring Boot）': 'http://localhost:18081',
-  'PHP（CakePHP）': 'http://localhost:18082',
-  'PHP（CodeIgniter）': 'http://localhost:18083',
-  'PHP（FuelPHP）': 'http://localhost:18084',
-  'Python（Django）': 'http://localhost:18085',
-  'Ruby（Rails）': 'http://localhost:18086',
+  'Go（Gin）': '/api/go',
+  'Java（Spring Boot）': '/api/java',
+  'PHP（CakePHP）': '/api/php-cake',
+  'PHP（CodeIgniter）': '/api/php-codeigniter',
+  'PHP（FuelPHP）': '/api/php-fuel',
+  'Python（Django）': '/api/python',
+  'Ruby（Rails）': '/api/ruby',
 }
 const BACKEND_OPTIONS = Object.keys(BACKEND_MAP)
 
