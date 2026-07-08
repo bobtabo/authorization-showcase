@@ -40,6 +40,7 @@
 │   ├── python-django/
 │   └── ruby-rails/
 ├── 📂 docker/             # コンテナ定義
+├── 📂 e2e/                # 動作デモ GIF 録画（Playwright）
 ├── 📂 frontend/           # 認可管理画面（Vue.js / Nuxt.js）
 └── 📜 README.md
 ```
@@ -52,6 +53,7 @@
 |:--------------------|:--------------------------------|:---------------------------------------|
 | **`backends/`**     | 認可サーバー API 利用バックエンド（言語・FW 別）   | [README.md](./backends/README.md)      |
 | **`docker/`**       | コンテナ定義                          | [README.md](./docker/README.md)        |
+| **`e2e/`**          | 動作デモ GIF 録画（Playwright）          | [README.md](./e2e/README.md)           |
 | **`frontend/`**     | JWTサンプル画面（Vue.js / Nuxt.js）     | [README.md](./frontend/README.md)      |
 
 ---
