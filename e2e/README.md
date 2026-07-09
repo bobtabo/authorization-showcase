@@ -29,4 +29,4 @@ npm run record     # 録画（output/*.webm が生成される）
 npm run to-gif      # GIF 変換（docs/gif/*.gif が生成される）
 ```
 
-`output/` と `docs/gif/` は `.gitignore` 対象です。生成された GIF はドキュメントサービスにアップロードして運用する想定です。
+`output/`（録画中間ファイル）は `.gitignore` 対象ですが、`docs/gif/*.gif` は README に埋め込んで使うためリポジトリに含めます。

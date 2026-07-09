@@ -12,4 +12,3 @@ docker/local/.env
 /backends/java-springboot/build/
 /e2e/node_modules/
 /e2e/output/
-/docs/gif/
