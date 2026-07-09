@@ -1,0 +1,11 @@
+{
+  "name": "showcase-e2e",
+  "private": true,
+  "scripts": {
+    "record": "playwright test --project=chromium",
+    "to-gif": "bash scripts/to-gif.sh"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1"
+  }
+}

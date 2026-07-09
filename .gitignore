@@ -10,3 +10,5 @@ docker/local/.env
 /backends/go-gin/tmp/
 /backends/java-springboot/.gradle/
 /backends/java-springboot/build/
+/e2e/node_modules/
+/e2e/output/
