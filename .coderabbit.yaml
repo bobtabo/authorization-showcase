@@ -1,3 +1,7 @@
 reviews:
   auto_review:
     enabled: true
+    ignore_bots: false
+    base_branches:
+      - "develop"
+      - "main"
