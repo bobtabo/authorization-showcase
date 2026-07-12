@@ -1,3 +1,5 @@
+name: showcase-app-go
+
 networks:
   showcase:
     external: true
@@ -33,7 +35,14 @@ services:
       - '${GO_DEBUG_PORT}:2345'
     volumes:
       - ./../../../backends/go-gin:/var/www/${APP_NAME}
+      - ./../entrypoint.sh:/entrypoint.sh
     working_dir: /var/www/${APP_NAME}
+    env_file:
+      - path: ./../.env
+        required: false
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
     command: air
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     networks:
       - showcase

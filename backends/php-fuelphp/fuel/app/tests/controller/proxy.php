@@ -54,8 +54,8 @@ class Test_Controller_Proxy extends TestCase
         $this->assertInstanceOf(\Response::class, $response);
         $this->assertSame(200, $response->status);
         $body = json_decode((string) $response->body, true);
-        $this->assertIsArray($body);
-        $this->assertGreaterThan(0, count($body));
+        $this->assertIsArray($body['data']);
+        $this->assertGreaterThan(0, count($body['data']));
     }
 
     // ------------------------------------------------------------------

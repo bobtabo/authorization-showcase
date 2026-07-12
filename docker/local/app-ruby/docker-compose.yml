@@ -1,3 +1,5 @@
+name: showcase-app-ruby
+
 networks:
   showcase:
     external: true
@@ -33,9 +35,16 @@ services:
       - '${RB_RAILS_DEBUG_PORT}:1234'
     volumes:
       - ./../../../backends/ruby-rails:/var/www/${APP_NAME}
+      - ./../entrypoint.sh:/entrypoint.sh
     working_dir: /var/www/${APP_NAME}
+    env_file:
+      - path: ./../.env
+        required: false
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
     command: >
       sh -c "bundle install --quiet &&
              bundle exec puma -b tcp://0.0.0.0:3000"
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     networks:
       - showcase

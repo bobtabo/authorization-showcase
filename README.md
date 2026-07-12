@@ -7,6 +7,7 @@
 
 ## :clipboard: 目次
 
+- [デモ](#デモ)
 - [システム構造](#システム構造)
 - [プロジェクト構成](#プロジェクト構成)
 - [開発環境構築手順](#開発環境構築手順)
@@ -28,6 +29,16 @@
 
 ---
 
+## :clapper: デモ
+
+<p align="center">
+  <img src="./docs/gif/jwt-flow.gif" alt="JWT発行／検証フローのデモ" width="800">
+</p>
+
+デモの作成方法は [e2e/README.md](./e2e/README.md) を参照してください。
+
+---
+
 ## :building_construction: システム構造
 
 ```.
@@ -40,6 +51,9 @@
 │   ├── python-django/
 │   └── ruby-rails/
 ├── 📂 docker/             # コンテナ定義
+├── 📂 docs/
+│   └── gif/               # デモ GIF
+├── 📂 e2e/                # 動作デモ GIF 録画（Playwright）
 ├── 📂 frontend/           # 認可管理画面（Vue.js / Nuxt.js）
 └── 📜 README.md
 ```
@@ -52,6 +66,7 @@
 |:--------------------|:--------------------------------|:---------------------------------------|
 | **`backends/`**     | 認可サーバー API 利用バックエンド（言語・FW 別）   | [README.md](./backends/README.md)      |
 | **`docker/`**       | コンテナ定義                          | [README.md](./docker/README.md)        |
+| **`e2e/`**          | 動作デモ GIF 録画（Playwright）          | [README.md](./e2e/README.md)           |
 | **`frontend/`**     | JWTサンプル画面（Vue.js / Nuxt.js）     | [README.md](./frontend/README.md)      |
 
 ---
@@ -60,7 +75,18 @@
 
 ### 前提
 
-- [認可サーバー](https://github.com/bobtabo/authorization) 環境が起動していること
+- [認可サーバー](https://github.com/bobtabo/authorization) が **localstack モード**で起動していること（`BACKEND_MODE=localstack` がデフォルト）
+- [AWS CLI](https://docs.aws.amazon.com/ja_jp/cli/latest/userguide/getting-started-install.html) がインストール済みで、LocalStack 用プロファイル（`localstack`）が設定済みであること
+
+  > [!NOTE]
+  > LocalStack 用のプロファイル設定：
+  > ```bash
+  > aws configure --profile localstack
+  > # AWS Access Key ID: test
+  > # AWS Secret Access Key: test
+  > # Default region name: ap-northeast-1
+  > # Default output format: json
+  > ```
 
 ### 1. リポジトリのクローン
 
@@ -75,6 +101,12 @@ cd authorization-showcase
 cd docker
 find ./bin -type f -exec chmod 755 {} +
 bin/docker-environment.sh
+```
+
+認可サーバーの API Gateway ID を取得して環境ファイルを生成します。
+
+```bash
+bash ../scripts/setup-local-env.sh
 ```
 
 ### 3. 共通コンテナの起動（Nginx Proxy）
