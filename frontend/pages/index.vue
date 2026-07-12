@@ -51,8 +51,8 @@ const loadClients = async (): Promise<void> => {
   loadingClients.value = true
   clients.value = []
   try {
-    const data = await $fetch<Client[]>(`${backendUrl.value}/clients?statuses[]=2`)
-    clients.value = Array.isArray(data) ? data : []
+    const response = await $fetch<{ data: Client[] }>(`${backendUrl.value}/clients?statuses[]=2`)
+    clients.value = Array.isArray(response?.data) ? response.data : []
     selectedIdentifier.value = clients.value[0]?.identifier ?? ''
   } catch {
     clients.value = []
