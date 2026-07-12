@@ -17,7 +17,7 @@
     },
     "require-dev": {
         "fuel/docs": "dev-1.9/develop",
-        "phpunit/phpunit": "^11.0"
+        "phpunit/phpunit": "^9.6"
     },
     "suggest": {
         "dwoo/dwoo" : "Allow Dwoo templating with the Parser package",
