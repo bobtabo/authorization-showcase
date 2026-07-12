@@ -48,8 +48,8 @@ class ProxyControllerTest extends TestCase
 
         $this->assertResponseCode(200);
         $body = json_decode((string) $this->_response->getBody(), true);
-        $this->assertIsArray($body);
-        $this->assertGreaterThan(0, count($body));
+        $this->assertIsArray($body['data']);
+        $this->assertGreaterThan(0, count($body['data']));
     }
 
     // ------------------------------------------------------------------

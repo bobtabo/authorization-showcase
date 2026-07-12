@@ -28,8 +28,8 @@ class ClientsViewTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
-        self.assertIsInstance(data, list)
-        self.assertGreater(len(data), 0)
+        self.assertIsInstance(data['data'], list)
+        self.assertGreater(len(data['data']), 0)
 
 
 class GateIssueViewTest(TestCase):

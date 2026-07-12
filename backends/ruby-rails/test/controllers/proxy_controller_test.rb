@@ -27,8 +27,8 @@ class ProxyControllerTest < ActionController::TestCase
 
     assert_response :success
     data = JSON.parse(response.body)
-    assert data.is_a?(Array), "expected Array, got #{data.class}"
-    assert data.length > 0, 'expected at least one client'
+    assert data['data'].is_a?(Array), "expected Array, got #{data['data'].class}"
+    assert data['data'].length > 0, 'expected at least one client'
   end
 
   test 'gate_issue returns a token' do

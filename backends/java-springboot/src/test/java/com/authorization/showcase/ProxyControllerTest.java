@@ -78,7 +78,7 @@ class ProxyControllerTest {
                 getWithAuth("/clients?statuses%5B%5D=2").build(), HttpResponse.BodyHandlers.ofString());
 
         assertThat(response.statusCode()).isEqualTo(200);
-        assertThat(response.body()).startsWith("[");
+        assertThat(response.body()).contains("\"data\":[");
     }
 
     @Test
