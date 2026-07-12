@@ -10,6 +10,12 @@ on:
       - 'backends/python-django/**'
   workflow_dispatch:
 
+# 全バックエンドCIが同一のngrokトンネル/LocalStackを共有しているため、
+# 同時実行すると輻輳して502エラーになることがある。直列実行させて防ぐ。
+concurrency:
+  group: shared-authserver-tunnel
+  cancel-in-progress: false
+
 jobs:
   test:
     runs-on: ubuntu-latest
