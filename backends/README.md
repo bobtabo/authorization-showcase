@@ -4,7 +4,7 @@
 > 認可サーバー API での JWT 発行／検証のバックエンドを、**複数の言語・フレームワーク**で構成しています。  
 > 同一の認可サーバー API に対する実装を、言語・フレームワーク別にディレクトリごとに分けています。
 
-📖 **API の正:** [`openapi.yml`](https://github.com/bobtabo/authorization/blob/develop/docs/api-spec/openapi.yml) ／ Swagger UI は [`docs/api-spec`](https://github.com/bobtabo/authorization/tree/develop/docs/api-spec)（[認可サーバー](https://github.com/bobtabo/authorization) リポジトリ側）
+📖 **API仕様:** [Swagger UI](https://bobtabo.github.io/authorization/)
 
 ---
 
