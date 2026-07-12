@@ -26,8 +26,16 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Resolve AUTH_SERVER_URL
+        env:
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_DEFAULT_REGION: ap-northeast-1
+          NGROK_URL: https://ample-precise-knee.ngrok-free.dev
+        run: |
+          API_ID=$(aws --endpoint-url="${NGROK_URL}" apigateway get-rest-apis --query 'items[0].id' --output text)
+          echo "AUTH_SERVER_URL=${NGROK_URL}/restapis/${API_ID}/local/_user_request_/function/php" >> "$GITHUB_ENV"
+
       - name: Run tests
         run: ./gradlew test
         working-directory: backends/java-springboot
-        env:
-          AUTH_SERVER_URL: https://ample-precise-knee.ngrok-free.dev/restapis/{api-id}/local/_user_request_

@@ -45,8 +45,8 @@ class ProxyTest extends CIUnitTestCase
 
         $result->assertStatus(200);
         $body = json_decode((string) $result->response()->getBody(), true);
-        $this->assertIsArray($body);
-        $this->assertGreaterThan(0, count($body));
+        $this->assertIsArray($body['data']);
+        $this->assertGreaterThan(0, count($body['data']));
     }
 
     // ------------------------------------------------------------------
