@@ -57,11 +57,13 @@ func TestClients(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
 	}
-	var clients []map[string]interface{}
-	if err := json.Unmarshal(w.Body.Bytes(), &clients); err != nil {
-		t.Fatalf("expected JSON array: %v\nbody: %s", err, w.Body.String())
+	var body struct {
+		Data []map[string]interface{} `json:"data"`
 	}
-	if len(clients) == 0 {
+	if err := json.Unmarshal(w.Body.Bytes(), &body); err != nil {
+		t.Fatalf("expected JSON object with data array: %v\nbody: %s", err, w.Body.String())
+	}
+	if len(body.Data) == 0 {
 		t.Error("expected at least one client")
 	}
 }
