@@ -13,7 +13,7 @@ mkdir -p "${OUTPUT_DIR}"
 
 find "${INPUT_DIR}" -name "*.webm" | while read -r webm; do
   name=$(basename "${webm}" .webm)
-  ffmpeg -i "${webm}" \
+  ffmpeg -nostdin -i "${webm}" \
     -vf "fps=15,scale=960:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" \
     -loop 0 \
     "${OUTPUT_DIR}/${name}.gif" -y

@@ -15,17 +15,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # リポジトリをチェックアウト
       - uses: actions/checkout@v4
 
+      # PHP 8.3 をセットアップ
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
 
+      # Composer で依存パッケージをインストール
       - name: Install dependencies
         run: composer install
         working-directory: backends/php-codeigniter
 
+      # ngrok経由でLocalStackの現在のAPI Gateway IDを取得し、AUTH_SERVER_URLを組み立てる
+      # （IDはLocalStack再起動のたびに変わるため、ハードコードせず実行時に解決する）
       - name: Resolve AUTH_SERVER_URL
         env:
           AWS_ACCESS_KEY_ID: test
@@ -34,8 +39,13 @@ jobs:
           NGROK_URL: https://ample-precise-knee.ngrok-free.dev
         run: |
           API_ID=$(aws --endpoint-url="${NGROK_URL}" apigateway get-rest-apis --query 'items[0].id' --output text)
+          if [ -z "${API_ID}" ] || [ "${API_ID}" = "None" ]; then
+            echo "::error::No API Gateway REST API found via ${NGROK_URL}"
+            exit 1
+          fi
           echo "AUTH_SERVER_URL=${NGROK_URL}/restapis/${API_ID}/local/_user_request_/function/php" >> "$GITHUB_ENV"
 
+      # 解決した AUTH_SERVER_URL を使って認可サーバー（LocalStack経由）に対するテストを実行
       - name: Run tests
         run: ./vendor/bin/phpunit
         working-directory: backends/php-codeigniter

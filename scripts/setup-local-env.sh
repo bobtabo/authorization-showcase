@@ -11,7 +11,24 @@
 
 set -euo pipefail
 
-PROFILE="${1:-localstack}"
+PROFILE="localstack"
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --profile)
+      PROFILE="${2:-localstack}"
+      shift 2
+      ;;
+    --profile=*)
+      PROFILE="${1#--profile=}"
+      shift
+      ;;
+    *)
+      echo "❌ 不明な引数です: $1"
+      echo "   使い方: bash scripts/setup-local-env.sh [--profile <profile>]"
+      exit 1
+      ;;
+  esac
+done
 ENDPOINT="http://localhost:4566"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"

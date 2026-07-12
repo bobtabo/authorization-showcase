@@ -106,7 +106,7 @@ bin/docker-environment.sh
 認可サーバーの API Gateway ID を取得して環境ファイルを生成します。
 
 ```bash
-bash scripts/setup-local-env.sh
+bash ../scripts/setup-local-env.sh
 ```
 
 ### 3. 共通コンテナの起動（Nginx Proxy）

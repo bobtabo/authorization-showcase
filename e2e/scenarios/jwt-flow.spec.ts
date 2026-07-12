@@ -11,7 +11,7 @@ import { test, expect, type Locator, type Page } from '@playwright/test'
  *   npm run record
  */
 
-const BACKEND_URL = 'http://localhost:18080' // Go（Gin） — デフォルトで選択されるバックエンド
+const BACKEND_URL = 'http://localhost:5173/api/go' // Go（Gin） — デフォルトで選択されるバックエンド（Nuxtのviteプロキシ経由）
 
 const CLIENT = {
   id: 1,
@@ -141,7 +141,7 @@ test('JWT発行／検証フローのデモ録画', async ({ page }) => {
 
   // クライアント一覧をモック
   await page.route(`${BACKEND_URL}/clients*`, (route) =>
-    route.fulfill({ json: [CLIENT] }),
+    route.fulfill({ json: { data: [CLIENT], pager: {} } }),
   )
 
   // JWT 発行をモック（リクエストの member をそのまま payload に埋め込む）
