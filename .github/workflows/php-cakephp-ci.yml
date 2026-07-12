@@ -18,11 +18,11 @@ jobs:
       # リポジトリをチェックアウト
       - uses: actions/checkout@v4
 
-      # PHP 8.4 をセットアップ
+      # PHP 8.5 をセットアップ（Dockerfileの php:8.5-fpm に合わせる）
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: '8.5'
           extensions: apcu
           ini-values: apc.enable_cli=1
 
