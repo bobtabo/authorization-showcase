@@ -30,4 +30,4 @@ jobs:
         run: ./gradlew test
         working-directory: backends/java-springboot
         env:
-          AUTH_SERVER_URL: https://ample-precise-knee.ngrok-free.dev/restapis/{api-id}/local/_user_request_
+          AUTH_SERVER_URL: https://ample-precise-knee.ngrok-free.dev/restapis/bg4rg8ca9o/local/_user_request_/function/php
