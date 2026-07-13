@@ -100,7 +100,7 @@ cd authorization-showcase
 ```bash
 cd docker
 find ./bin -type f -exec chmod 755 {} +
-bin/docker-environment.sh
+bin/docker-common.sh env
 ```
 
 認可サーバーの API Gateway ID を取得して環境ファイルを生成します。
