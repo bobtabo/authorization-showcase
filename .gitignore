@@ -6,7 +6,10 @@
 .env
 docker/local/common/.env
 docker/local/.env
-.claude/
+.claude/*
+!.claude/settings.json
+!.claude/hooks/
+.claude/settings.local.json
 /backends/go-gin/tmp/
 /backends/java-springboot/.gradle/
 /backends/java-springboot/build/
