@@ -40,7 +40,7 @@ case "$REL" in
     # goimports があれば import 最適化 + 整形（gofmt 兼用なので再整形は省略可）
     if have goimports; then ( cd "$PROJECT_DIR/$backend_rel" && run goimports -w "$sub" )
     elif container_up backends/go-gin; then
-      in_container backends/go-gin sh -c "command -v goimports >/dev/null 2>&1 && goimports -w '$sub' || gofmt -w '$sub'"
+      in_container backends/go-gin sh -c 'command -v goimports >/dev/null 2>&1 && goimports -w "$1" || gofmt -w "$1"' _ "$sub"
     fi
     ;;
 
@@ -58,7 +58,7 @@ case "$REL" in
     if [ -x "$PROJECT_DIR/$backend_rel/vendor/bin/phpcbf" ]; then
       ( cd "$PROJECT_DIR/$backend_rel" && run vendor/bin/phpcbf "$sub" )
     elif container_up backends/php-cakephp; then
-      in_container backends/php-cakephp sh -c "[ -x vendor/bin/phpcbf ] && vendor/bin/phpcbf '$sub' || true"
+      in_container backends/php-cakephp sh -c '[ -x vendor/bin/phpcbf ] && vendor/bin/phpcbf "$1" || true' _ "$sub"
     else
       log "php-cakephp: phpcbf が見つからないためスキップ ($sub)"
     fi
@@ -71,7 +71,7 @@ case "$REL" in
     elif [ -x "$PROJECT_DIR/$backend_rel/vendor/bin/phpcbf" ]; then
       ( cd "$PROJECT_DIR/$backend_rel" && run vendor/bin/phpcbf "$sub" )
     elif container_up backends/php-codeigniter; then
-      in_container backends/php-codeigniter sh -c "[ -x vendor/bin/php-cs-fixer ] && vendor/bin/php-cs-fixer fix '$sub' || { [ -x vendor/bin/phpcbf ] && vendor/bin/phpcbf '$sub'; } || true"
+      in_container backends/php-codeigniter sh -c '[ -x vendor/bin/php-cs-fixer ] && vendor/bin/php-cs-fixer fix "$1" || { [ -x vendor/bin/phpcbf ] && vendor/bin/phpcbf "$1"; } || true' _ "$sub"
     else
       log "php-codeigniter: php-cs-fixer/phpcbf 未導入のためスキップ ($sub)"
     fi
@@ -84,7 +84,7 @@ case "$REL" in
     elif [ -x "$PROJECT_DIR/$backend_rel/fuel/vendor/bin/phpcbf" ]; then
       ( cd "$PROJECT_DIR/$backend_rel" && run fuel/vendor/bin/phpcbf "$sub" )
     elif container_up backends/php-fuelphp; then
-      in_container backends/php-fuelphp sh -c "[ -x fuel/vendor/bin/php-cs-fixer ] && fuel/vendor/bin/php-cs-fixer fix '$sub' || { [ -x fuel/vendor/bin/phpcbf ] && fuel/vendor/bin/phpcbf '$sub'; } || true"
+      in_container backends/php-fuelphp sh -c '[ -x fuel/vendor/bin/php-cs-fixer ] && fuel/vendor/bin/php-cs-fixer fix "$1" || { [ -x fuel/vendor/bin/phpcbf ] && fuel/vendor/bin/phpcbf "$1"; } || true' _ "$sub"
     else
       log "php-fuelphp: php-cs-fixer/phpcbf 未導入のためスキップ ($sub)"
     fi
@@ -96,7 +96,7 @@ case "$REL" in
     if have ruff; then ( cd "$PROJECT_DIR/$backend_rel" && run ruff check --fix --select I,F401 -q "$sub"; run ruff format -q "$sub" ); fi
     if ! have black && ! have ruff; then
       if container_up backends/python-django; then
-        in_container backends/python-django sh -c "command -v black >/dev/null 2>&1 && black -q '$sub'; command -v ruff >/dev/null 2>&1 && { ruff check --fix --select I,F401 -q '$sub'; ruff format -q '$sub'; }; true"
+        in_container backends/python-django sh -c 'command -v black >/dev/null 2>&1 && black -q "$1"; command -v ruff >/dev/null 2>&1 && { ruff check --fix --select I,F401 -q "$1"; ruff format -q "$1"; }; true' _ "$sub"
       else
         log "python-django: black/ruff 未導入のためスキップ ($sub)"
       fi
@@ -108,7 +108,7 @@ case "$REL" in
     if have bundle; then
       ( cd "$PROJECT_DIR/$backend_rel" && run bundle exec rubocop -a "$sub" )
     elif container_up backends/ruby-rails; then
-      in_container backends/ruby-rails sh -c "bundle exec rubocop -a '$sub' || true"
+      in_container backends/ruby-rails sh -c 'bundle exec rubocop -a "$1" || true' _ "$sub"
     else
       log "ruby-rails: bundle が見つからないためスキップ ($sub)"
     fi

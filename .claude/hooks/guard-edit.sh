@@ -10,7 +10,13 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 INPUT="$(cat)"
 FILE="$(json_field '.tool_input.file_path' "$INPUT")"
-[ -z "$FILE" ] && exit 0
+if [ -z "$FILE" ]; then
+  # ガードは「ブロックする」ことが目的なので、入力を解析できないまま
+  # 素通りさせる（フェイルオープン）と機密ファイル保護が無効化されてしまう。
+  # jq/python3 のどちらも無い場合はその旨を必ず警告する。
+  json_parser_available || echo "[claude-hook] 警告: jq/python3 が無く入力を解析できないため機密ファイルガードが無効です" >&2
+  exit 0
+fi
 
 base="$(basename "$FILE")"
 

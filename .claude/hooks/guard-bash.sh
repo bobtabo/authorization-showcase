@@ -12,7 +12,12 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 INPUT="$(cat)"
 CMD="$(json_field '.tool_input.command' "$INPUT")"
-[ -z "$CMD" ] && exit 0
+if [ -z "$CMD" ]; then
+  # ガードは危険コマンドを「ブロックする」ことが目的。入力を解析できないまま
+  # 素通りさせるのは危険なので、パーサが無い場合は必ず警告する。
+  json_parser_available || echo "[claude-hook] 警告: jq/python3 が無く入力を解析できないため危険コマンドガードが無効です" >&2
+  exit 0
+fi
 
 deny() { echo "$1" >&2; exit 2; }
 
@@ -36,9 +41,8 @@ printf '%s' "$norm" | grep -Eq '(^|[;&|] *)git .*(checkout|restore) .*(--|\.)' \
 
 # ---- 2. Docker 停止コマンドのガード ----
 if printf '%s' "$norm" | grep -Eq '(^|[;&|] *)docker(-compose)? +(stop|kill)( |$)' \
-   || printf '%s' "$norm" | grep -Eq '(^|[;&|] *)docker +compose +down( |$)' \
-   || printf '%s' "$norm" | grep -Eq '(^|[;&|] *)docker-compose +down( |$)' \
-   || printf '%s' "$norm" | grep -Eq '(^|[;&|] *)docker +stop( |$)'; then
+   || printf '%s' "$norm" | grep -Eq '(^|[;&|] *)docker +compose +(stop|kill|down)( |$)' \
+   || printf '%s' "$norm" | grep -Eq '(^|[;&|] *)docker-compose +down( |$)'; then
   # docker/bin のラッパスクリプト経由なら許可
   if printf '%s' "$norm" | grep -Eq 'docker/bin/docker-[a-z-]+\.sh'; then
     :

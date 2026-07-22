@@ -24,11 +24,27 @@ have() { command -v "$1" >/dev/null 2>&1; }
 
 run() { timeout "${TOOL_TIMEOUT}" "$@"; }
 
-# stdin の JSON から値を取り出す（jq が無ければ空文字）
+# JSON パーサ(jq / python3)のいずれかが使えるか
+json_parser_available() { have jq || have python3; }
+
+# stdin の JSON から値を取り出す。jq を優先し、無ければ python3 にフォールバック。
+# どちらも無い場合は空文字（ガード側で無効化を検知して警告する）。
 json_field() {
   local field="$1" input="$2"
   if have jq; then
     printf '%s' "$input" | jq -r "$field // empty" 2>/dev/null
+  elif have python3; then
+    printf '%s' "$input" | python3 -c '
+import sys, json
+path = [p for p in sys.argv[1].lstrip(".").split(".") if p]
+try:
+    v = json.load(sys.stdin)
+    for k in path:
+        v = v.get(k) if isinstance(v, dict) else None
+    print("" if v is None else v)
+except Exception:
+    print("")
+' "$field"
   fi
 }
 
