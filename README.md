@@ -26,6 +26,7 @@
     - [6.6 Python（Django）](#66-pythondjango)
     - [6.7 Ruby（Rails）](#67-rubyrails)
   - [7. ブラウザで開く](#7-ブラウザで開く)
+- [Claude Code Hooks](#gear-claude-code-hooks)
 
 ---
 
@@ -188,3 +189,15 @@ cp .env.example .env
 ### 7. ブラウザで開く
 
 http://localhost:5173
+
+---
+
+## :gear: Claude Code Hooks
+
+このリポジトリでは `.claude/settings.json` により、Claude Code での編集時に以下を自動化しています（すべて非ブロッキング）。詳細は [`.claude/hooks/`](./.claude/hooks/) を参照してください。
+
+- 編集後の自動フォーマット・import 最適化（言語/FW 別、ツール未導入時はスキップ）
+- 変更ファイル単位の軽量 Lint 通知
+- `.env` 等の機密ファイル編集ブロック
+- `git push --force` / `reset --hard` 等の危険な git 操作、Docker 停止コマンドのガード、コミット前のシークレットスキャン（gitleaks）
+- タスク完了時のデスクトップ通知
