@@ -27,6 +27,7 @@
     - [6.7 Ruby（Rails）](#67-rubyrails)
   - [7. ブラウザで開く](#7-ブラウザで開く)
 - [Claude Code Hooks](#gear-claude-code-hooks)
+- [関連リポジトリ](#関連リポジトリ)
 
 ---
 
@@ -201,3 +202,13 @@ http://localhost:5173
 - `.env` 等の機密ファイル編集ブロック
 - `git push --force` / `reset --hard` 等の危険な git 操作、Docker 停止コマンドのガード、コミット前のシークレットスキャン（gitleaks）
 - タスク完了時のデスクトップ通知
+
+---
+
+## :books: 関連リポジトリ
+
+| リポジトリ | 説明 |
+|:---|:---|
+| [bobtabo/authorization](https://github.com/bobtabo/authorization) | 認可サーバー（OAuth2/OIDC）・管理画面 |
+| [bobtabo/authorization-mobile](https://github.com/bobtabo/authorization-mobile) | クライアント操作用モバイルアプリ |
+| bobtabo/authorization-showcase | 本リポジトリ：認可サーバー API（JWT発行／検証）の多言語・多フレームワーク実装ショーケース |
