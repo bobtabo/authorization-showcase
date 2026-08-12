@@ -23,12 +23,19 @@ allowed-tools: Bash(git:*), Bash(gh:*)
 ## 1. featureブランチ作成
 
 ```bash
+set -euo pipefail
 BASE=develop   # 明示指定があればそちらに置き換える
+N=<N>          # 対応するIssue番号
+
 git checkout "$BASE"
-git pull origin "$BASE"
-gh issue view <N> --repo bobtabo/authorization-showcase --json title -q .title
-git checkout -b feature/issue-<N>
+git pull --ff-only origin "$BASE"
+gh issue view "$N" --repo bobtabo/authorization-showcase --json title -q .title
+git checkout -b "feature/issue-$N"
 ```
+
+`set -euo pipefail` により、Issueが存在せず `gh issue view` が失敗した場合は
+`git checkout -b` を実行せずに停止する。`git pull` は `--ff-only` とし、
+ローカルとリモートが分岐している場合は自動マージせず停止する。
 
 ## 2. developへのPR作成
 
@@ -53,14 +60,23 @@ git checkout -b feature/issue-<N>
   Issueの一部のみ対応する場合（Issueの残タスクが残る場合）は `Closes #<N>` ではなく
   `Refs #<N>` とし、Issueを自動クローズさせない。
 
-- コマンド:
+- コマンド（本文には上記テンプレートの内容をそのまま埋め込む。省略記号で済ませない）:
 
   ```bash
-  git push -u origin feature/issue-<N>
+  git push -u origin "feature/issue-$N"
   gh pr create --repo bobtabo/authorization-showcase \
-    --base develop --head feature/issue-<N> \
+    --base develop --head "feature/issue-$N" \
     --title "<type>(#<N>): <要約>" --body "$(cat <<'EOF'
-  ...
+  ## Summary
+
+  Issue #<N> 対応。<変更内容の要約>
+
+  ## Changes
+  - <変更ファイル/内容>
+
+  Closes #<N>
+
+  🤖 Generated with [Claude Code](https://claude.com/claude-code)
   EOF
   )"
   ```
@@ -69,3 +85,11 @@ git checkout -b feature/issue-<N>
 
 - `develop` / `main` への直接push（featureブランチ経由のPRを必ず通す）
 - `develop` → `main` のマージはこのSkillでは行わない（「develop → main 同期」PRとして別途手動で作成する）
+
+## 既知の制約
+
+- 本SkillはSKILL.mdという「明示的に呼び出したときの手順書」であり、`allowed-tools` や
+  現状の `.claude/hooks/guard-bash.sh` は `develop` / `main` への直接pushを機械的には
+  ブロックしない（`guard-bash.sh` が対象とするのは `push --force` / `reset --hard` 等の
+  破壊的操作のみ）。保護ブランチへのpushを権限層で強制したい場合は、`guard-bash.sh` の
+  拡張または GitHub 側のブランチ保護ルールの設定を別Issueとして検討する。
