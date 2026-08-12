@@ -25,7 +25,8 @@ allowed-tools: Bash(git:*), Bash(gh:*)
 ```bash
 set -euo pipefail
 BASE=develop   # 明示指定があればそちらに置き換える
-N=<N>          # 対応するIssue番号
+N=34           # 対応するIssue番号に置き換える（実行前に書き換える。以下このSKILL.mdでは
+               # <N> を「この値に置き換える」プレースホルダーとして表記する）
 
 git checkout "$BASE"
 git pull --ff-only origin "$BASE"
@@ -63,6 +64,7 @@ git checkout -b "feature/issue-$N"
 - コマンド（本文には上記テンプレートの内容をそのまま埋め込む。省略記号で済ませない）:
 
   ```bash
+  set -euo pipefail
   git push -u origin "feature/issue-$N"
   gh pr create --repo bobtabo/authorization-showcase \
     --base develop --head "feature/issue-$N" \
@@ -75,6 +77,7 @@ git checkout -b "feature/issue-$N"
   - <変更ファイル/内容>
 
   Closes #<N>
+  <!-- Issueの一部のみ対応する場合は Closes ではなく Refs #<N> にする -->
 
   🤖 Generated with [Claude Code](https://claude.com/claude-code)
   EOF
