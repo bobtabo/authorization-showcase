@@ -20,10 +20,11 @@ CIには組み込まれない・手動実行のみ）。
 
 ## 手順
 
-Playwrightブラウザのインストールは、`package.json` に固定された
-`@playwright/test` のバージョンを使うため、必ず `npm install` の**後**に行う
-（`npm install` 前に `npx playwright install` を実行すると、レジストリから
-バージョン固定されていない `playwright` を取得してしまう）。
+Playwrightブラウザのインストールは、`package-lock.json` で解決されたバージョン
+（本リポジトリでは `playwright@1.61.1`）を使うため、必ず `npm install` の**後**に
+行う（`npm install` 前に `npx playwright install` を実行すると、ローカルに無い
+`playwright` をレジストリから取得してしまい、バージョンがずれる）。再現性を
+厳密にしたい場合は `npm install` の代わりに `npm ci` を使う。
 
 ```bash
 cd e2e

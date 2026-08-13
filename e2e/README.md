@@ -21,9 +21,9 @@ e2e/
 
 ## :rocket: 使い方
 
-Playwright ブラウザのインストールは `package.json` に固定されたバージョンを
-使うため、`npm install` の**後**に行ってください（先に実行すると、バージョン
-固定されていない `playwright` をレジストリから取得してしまいます）。
+Playwright ブラウザのインストールは `package-lock.json` で解決されたバージョンを
+使うため、`npm install` の**後**に行ってください（先に実行すると、ローカルに
+無い `playwright` をレジストリから取得してしまいバージョンがずれます）。
 
 ```bash
 cd e2e

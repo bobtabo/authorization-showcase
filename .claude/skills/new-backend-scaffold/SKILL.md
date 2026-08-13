@@ -110,9 +110,21 @@ cp .github/workflows/go-gin-ci.yml .github/workflows/<name>-ci.yml
   - `.claude/skills/docker-ops/SKILL.md` の「起動順序」の個別列挙に
     `docker/bin/docker-<name>.sh up` を追加
 
-上記4ファイルすべてに `<name>` が登場することを最終確認する
-（`grep -rl "<name の実際値>" .claude/skills/ backends/README.md README.md`
-で漏れがないか機械的にチェックできる）。
+以下7ファイルすべてに `<name>` が登場することを最終確認する:
+`docker/bin/docker-backends.sh`（手順3）、`.github/workflows/<name>-ci.yml`
+（手順4）、`backends/README.md` / `README.md`（本節）、
+`.claude/skills/{backend-dispatch,backend-ci-trigger,docker-ops}/SKILL.md`
+（本節）。
+
+```bash
+grep -rl "<name の実際値>" \
+  docker/bin/docker-backends.sh \
+  .github/workflows/<name>-ci.yml \
+  backends/README.md README.md \
+  .claude/skills/backend-dispatch/SKILL.md \
+  .claude/skills/backend-ci-trigger/SKILL.md \
+  .claude/skills/docker-ops/SKILL.md
+```
 
 ## 6. 動作確認
 
