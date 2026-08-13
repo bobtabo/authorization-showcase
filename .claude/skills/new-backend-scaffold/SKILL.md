@@ -91,8 +91,10 @@ cp .github/workflows/go-gin-ci.yml .github/workflows/<name>-ci.yml
   そのまま流用する（LocalStackのAPI Gateway IDをngrok経由で動的取得する仕組み）
 - テスト実行コマンド・`working-directory: backends/<name>` のみ差し替え
 
-featureブランチ上でこのCIを確認する方法は backend-ci-trigger Skillを参照
-（`workflow_dispatch` での手動発火が必要）。
+新規追加したワークフローファイルは `main` にマージされるまで `workflow_dispatch`
+での手動発火ができない（GitHubの仕様。詳細は backend-ci-trigger Skillの当該
+注記を参照）。featureブランチ段階でのCI確認は、develop→main同期後まで待つか、
+ワークフローファイルのみ先に反映する必要がある。
 
 ## 5. ドキュメント更新
 
@@ -101,10 +103,25 @@ featureブランチ上でこのCIを確認する方法は backend-ci-trigger Ski
 - ルート `README.md`:
   - 「システム構造」のツリー（`backends/` 配下の一覧）に追加
   - 「6. バックエンドの初期設定」に `6.x <name>` の節を追加
+- 他Skillの登録先（更新を忘れるとSkill経由で新バックエンドを選択・起動・CI発火
+  できない）:
+  - `.claude/skills/backend-dispatch/SKILL.md` の対応表に1行追加
+  - `.claude/skills/backend-ci-trigger/SKILL.md` のワークフロー対応表に1行追加
+  - `.claude/skills/docker-ops/SKILL.md` の「起動順序」の個別列挙に
+    `docker/bin/docker-<name>.sh up` を追加
+
+上記4ファイルすべてに `<name>` が登場することを最終確認する
+（`grep -rl "<name の実際値>" .claude/skills/ backends/README.md README.md`
+で漏れがないか機械的にチェックできる）。
 
 ## 6. 動作確認
 
+`showcase` ネットワークが無い（＝ `docker/bin/docker-common.sh up` を一度も
+実行していない）クリーンな環境では、先に共通コンテナを起動しておく必要がある
+（docker-ops Skill参照）。
+
 ```bash
+docker/bin/docker-common.sh up   # showcaseネットワーク・nginx-proxyが無ければ起動
 docker/bin/docker-<name>.sh up
 docker/bin/docker-<name>.sh exec   # コンテナに入り疎通確認
 ```

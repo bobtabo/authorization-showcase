@@ -17,7 +17,15 @@ pushでは**自動実行されない**。
    トリガー対象外
 
 そのため `feature/issue-N` ブランチ上でCI結果を確認したい場合は、`workflow_dispatch`
-で手動発火する。develop/main へのpush時は該当pathsに応じて自動実行される。
+で手動発火する。`feature/issue-*` **以外**のブランチ（develop/main に限らない）への
+pushでは、該当pathsに応じて自動実行される。
+
+`workflow_dispatch` は、対象のワークフローファイルがdefaultブランチ（`main`）に
+既に存在している場合のみ使える。new-backend-scaffold Skillで新規追加したワークフロー
+ファイルは、`main` へマージされるまで `gh workflow run` で手動発火できない
+（GitHubがdispatch可否をdefaultブランチ上の定義で判定するため）。この場合は、
+develop→main同期後に確認するか、ワークフローファイルのみ先にdevelopおよびmainへ
+反映しておく。
 
 ## ワークフロー対応表
 
@@ -41,7 +49,8 @@ pushでは**自動実行されない**。
 影響するワークフローをそれぞれ個別に発火する（一括発火するコマンドは無い）。
 
 ```bash
-git diff --name-only develop... | sed -n 's#^backends/\([^/]*\)/.*#\1#p' | sort -u
+BASE=develop   # git-flowでこのfeatureブランチの派生元とした基準ブランチに合わせる
+git diff --name-only "$BASE"... | sed -n 's#^backends/\([^/]*\)/.*#\1#p' | sort -u
 # 出力された各ディレクトリ名を上表と突き合わせて対象ワークフローを決定する
 ```
 

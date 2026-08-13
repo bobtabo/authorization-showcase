@@ -17,14 +17,18 @@ e2e/
 ## :white_check_mark: 前提条件
 
 - ffmpeg がインストール済みであること（`brew install ffmpeg`）
-- Playwright ブラウザのインストール: `npx playwright install chromium`
 - `frontend/` の開発サーバーが `http://localhost:5173` で起動していること
 
 ## :rocket: 使い方
 
+Playwright ブラウザのインストールは `package.json` に固定されたバージョンを
+使うため、`npm install` の**後**に行ってください（先に実行すると、バージョン
+固定されていない `playwright` をレジストリから取得してしまいます）。
+
 ```bash
 cd e2e
 npm install
+npm exec -- playwright install chromium   # 初回のみ
 npm run record     # 録画（output/*.webm が生成される）
 npm run to-gif      # GIF 変換（docs/gif/*.gif が生成される）
 ```

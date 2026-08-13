@@ -9,9 +9,14 @@ allowed-tools: Bash(docker:*), Bash(cd:*), Bash(find:*)
 # docker-ops
 
 `docker/bin/*.sh` は各バックエンド・共通インフラのDocker操作を統一するラッパー
-スクリプト。`docker` / `docker compose` を直接叩かず、必ずこれらを経由する
-（`guard-bash.sh` が `docker stop` / `docker compose down` 等の直接実行をブロックし、
-本Skillのラッパー使用へ誘導する設計と対応している）。
+スクリプト。コンテナの起動・停止・破棄（`up`/`down`/`start`/`stop`）は必ずこれらを
+経由する（`guard-bash.sh` が `docker stop` / `docker compose stop|kill|down` 等の
+直接実行をブロックし、本Skillのラッパー使用へ誘導する）。
+
+一方、起動済みコンテナに対する非対話の単発コマンド実行（`exec`）は
+`guard-bash.sh` のブロック対象外であり、`docker compose -p showcase-<x> -f
+docker/local/app-<x>/docker-compose.yml exec --user 1000 <service> <コマンド>`
+を直接使ってよい（backend-dispatch Skill参照）。
 
 ## 前提（初回のみ）
 
