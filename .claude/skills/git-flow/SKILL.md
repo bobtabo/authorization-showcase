@@ -40,44 +40,36 @@ git checkout -b "feature/issue-$N"
 
 ## 2. developへのPR作成
 
-- base: `develop` / head: `feature/issue-<N>`（派生元を変えた場合もbaseは`develop`）
-- タイトル: `<type>(#<N>): <日本語要約>`
-  （type: feat/fix/docs/chore/refactor 等、conventional commit風。Issueのtypeを踏襲する）
-- 本文テンプレート:
+- base: `develop` / head: `feature/issue-$N`（派生元を変えた場合もbaseは`develop`）
+- タイトル: `$TYPE(#$N): $SUMMARY`
+  （`TYPE`: feat/fix/docs/chore/refactor 等、conventional commit風。Issueのtypeを踏襲する）
+- 本文: Summary / Changes / Closes(またはRefs) / 署名の4点を含める。Issueの一部のみ
+  対応する場合（Issueの残タスクが残る場合）は `Closes #$N` ではなく `Refs #$N` とし、
+  Issueを自動クローズさせない。
 
-  ```markdown
-  ## Summary
-
-  Issue #<N> 対応。<変更内容の要約>
-
-  ## Changes
-  - <変更ファイル/内容>
-
-  Closes #<N>
-
-  🤖 Generated with [Claude Code](https://claude.com/claude-code)
-  ```
-
-  Issueの一部のみ対応する場合（Issueの残タスクが残る場合）は `Closes #<N>` ではなく
-  `Refs #<N>` とし、Issueを自動クローズさせない。
-
-- コマンド（本文には上記テンプレートの内容をそのまま埋め込む。省略記号で済ませない）:
+- コマンド（`TYPE`/`SUMMARY`/`CHANGES`/`LINK` に実際の値を設定してから実行する。
+  heredocはクォートしない `<<EOF` にして変数展開させる。プレースホルダーのまま
+  送信しない）:
 
   ```bash
   set -euo pipefail
+  TYPE=feat                       # feat/fix/docs/chore/refactor 等
+  SUMMARY="日本語要約"
+  CHANGES="- 変更ファイル/内容"    # 複数行なら改行を含めて組み立てる
+  LINK="Closes #$N"                # 部分対応の場合は "Refs #$N" にする
+
   git push -u origin "feature/issue-$N"
   gh pr create --repo bobtabo/authorization-showcase \
     --base develop --head "feature/issue-$N" \
-    --title "<type>(#<N>): <要約>" --body "$(cat <<'EOF'
+    --title "${TYPE}(#${N}): ${SUMMARY}" --body "$(cat <<EOF
   ## Summary
 
-  Issue #<N> 対応。<変更内容の要約>
+  Issue #$N 対応。$SUMMARY
 
   ## Changes
-  - <変更ファイル/内容>
+  $CHANGES
 
-  Closes #<N>
-  <!-- Issueの一部のみ対応する場合は Closes ではなく Refs #<N> にする -->
+  $LINK
 
   🤖 Generated with [Claude Code](https://claude.com/claude-code)
   EOF

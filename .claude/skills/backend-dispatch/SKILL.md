@@ -39,16 +39,20 @@ allowed-tools: Bash(docker:*), Bash(git:*)
 - **テスト・ビルド・CLI実行**: 必ずコンテナ内で行う。ホストに言語ランタイムが
   入っていても、ホストで直接 `go test` 等を実行しない。
   ```bash
-  docker/bin/docker-<x>.sh exec
+  X=go   # 対応表の値に置き換える: go/java/php-cake/php-codeigniter/php-fuel/python/ruby
+  "docker/bin/docker-$X.sh" exec
   # コンテナ内シェルに入った状態で、通常のテスト/ビルドコマンドを実行する
   ```
   非対話的に1コマンドだけ実行したい場合は、対応する `docker/local/app-<x>/docker-compose.yml`
   を直接指定する（`docker exec <コンテナ名>` のようにコンテナ名を直書きしない。
   プロジェクト名・サービス名がバックエンドごとに異なるため取り違えやすい）:
   ```bash
-  docker compose -p showcase-<x> -f docker/local/app-<x>/docker-compose.yml \
-    exec --user 1000 <service> <コマンド>
+  X=go            # 対応表の値に置き換える
+  SERVICE=go      # execで指定するサービス名: go=go, java=java, php系=php, python=python, ruby=rb-rails
+  CMD="go test ./..."   # 実行したいコマンド
+
+  docker compose -p "showcase-$X" -f "docker/local/app-$X/docker-compose.yml" \
+    exec -T --user 1000 "$SERVICE" $CMD
   ```
-  （`<x>` は `go` / `java` / `php-cake` / `php-codeigniter` / `php-fuel` / `python` / `ruby`、
-  `<service>` は go=`go`, java=`java`, php系=`php`, python=`python`, ruby=`rb-rails`）
+  `-T` は必須（付けないとTTY割り当てを試みて、非対話環境では失敗しうる）。
 - コンテナが起動していない場合の対処は docker-ops Skillを参照。

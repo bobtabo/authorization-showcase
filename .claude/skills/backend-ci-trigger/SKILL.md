@@ -50,22 +50,34 @@ develop→main同期後に確認するか、ワークフローファイルのみ
 
 ```bash
 BASE=develop   # git-flowでこのfeatureブランチの派生元とした基準ブランチに合わせる
-git diff --name-only "$BASE"... | sed -n 's#^backends/\([^/]*\)/.*#\1#p' | sort -u
-# 出力された各ディレクトリ名を上表と突き合わせて対象ワークフローを決定する
+git diff --name-only "$BASE"...
 ```
+
+- `backends/<name>/**` に一致する変更 → 出力パスの `<name>` 部分を上表と
+  突き合わせ、対応するワークフローのみ発火する。
+- `.github/workflows/**`、`docker/**`、リポジトリ直下の設定ファイル等、
+  特定のバックエンドに閉じない変更（＝上記以外の変更）が1件でも含まれる場合は、
+  影響範囲を個別に切り分けず、上表の7ワークフロー全てを発火するフォールバックを
+  取る。
 
 ## 手動発火と結果確認
 
 ```bash
-gh workflow run <ワークフローファイル> --repo bobtabo/authorization-showcase --ref feature/issue-<N>
+WORKFLOW=go-gin-ci.yml   # 対象ワークフローファイル名（上表を参照して置き換える）
+N=34                      # このfeatureブランチに対応するIssue番号に置き換える
+
+gh workflow run "$WORKFLOW" --repo bobtabo/authorization-showcase --ref "feature/issue-$N"
 
 # 実行中/直近のrunを確認
 gh run list --repo bobtabo/authorization-showcase \
-  --workflow=<ワークフローファイル> --branch=feature/issue-<N> --limit 1
+  --workflow="$WORKFLOW" --branch="feature/issue-$N" --limit 1
 
-# 完了まで待ってログを見る
-gh run watch --repo bobtabo/authorization-showcase <run-id>
-gh run view --repo bobtabo/authorization-showcase <run-id> --log
+# 完了まで待ってログを見る（run idを直近実行結果から取得する）
+RUN_ID=$(gh run list --repo bobtabo/authorization-showcase \
+  --workflow="$WORKFLOW" --branch="feature/issue-$N" --limit 1 \
+  --json databaseId -q '.[0].databaseId')
+gh run watch --repo bobtabo/authorization-showcase "$RUN_ID"
+gh run view --repo bobtabo/authorization-showcase "$RUN_ID" --log
 ```
 
 ## 注意

@@ -15,8 +15,9 @@ allowed-tools: Bash(docker:*), Bash(cd:*), Bash(find:*)
 
 一方、起動済みコンテナに対する非対話の単発コマンド実行（`exec`）は
 `guard-bash.sh` のブロック対象外であり、`docker compose -p showcase-<x> -f
-docker/local/app-<x>/docker-compose.yml exec --user 1000 <service> <コマンド>`
-を直接使ってよい（backend-dispatch Skill参照）。
+docker/local/app-<x>/docker-compose.yml exec -T --user 1000 <service> <コマンド>`
+を直接使ってよい（`-T`必須。無いとTTY割り当てを試みて非対話環境で失敗しうる。
+backend-dispatch Skill参照）。
 
 ## 前提（初回のみ）
 
@@ -51,8 +52,9 @@ bin/docker-ruby.sh up
 ## コンテナに入る／破棄する
 
 ```bash
-docker/bin/docker-<x>.sh exec   # コンテナ内シェルに入る（Goはsh、他はbash）
-docker/bin/docker-<x>.sh down   # そのバックエンドのコンテナ・イメージ・ボリュームを破棄
+X=go   # 対応表（backend-dispatch Skill参照）の値に置き換える
+"docker/bin/docker-$X.sh" exec   # コンテナ内シェルに入る（Goはsh、他はbash）
+"docker/bin/docker-$X.sh" down   # そのバックエンドのコンテナ・イメージ・ボリュームを破棄
 docker/bin/docker-backends.sh down   # 全バックエンド一括破棄
 ```
 
