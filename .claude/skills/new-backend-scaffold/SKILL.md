@@ -19,15 +19,16 @@ allowed-tools: Bash(git:*), Bash(cp:*), Bash(mkdir:*)
   ブランチを作成しておく。
 - 以降のコマンド例は `NAME` 変数に実際のバックエンド名を入れて使う
   （`<name>` をそのままシェルに渡すと `<`/`>` がリダイレクトと解釈され
-  構文エラーになるため、必ず変数化する）:
-
-  ```bash
-  NAME=node-express   # 実際に追加するバックエンド名に置き換える
-  ```
+  構文エラーになるため、必ず変数化する）。
+- **各手順のbashブロックは別々のシェルプロセスとして実行される想定**で、
+  `NAME` はブロック間で共有されない。そのため各ブロックの先頭で毎回
+  `NAME=<実際の値>` を（同じ値で）設定し直す。同一シェルセッション内で
+  複数手順を続けて実行する場合は、2回目以降の再設定は害にならない。
 
 ## 1. バックエンドソース（`backends/$NAME/`）
 
 ```bash
+NAME=node-express   # 実際に追加するバックエンド名に置き換える
 mkdir -p "backends/$NAME"
 ```
 
@@ -37,10 +38,14 @@ mkdir -p "backends/$NAME"
 
 ## 2. Docker実行環境（`docker/local/app-$NAME/`）
 
-`docker/local/app-go/` を丸ごとコピーして書き換える。
+`docker/local/app-go/` の中身を丸ごとコピーして書き換える。ディレクトリ自体を
+`cp -r src dst` すると、`dst` が既に存在する場合は `dst/app-go/` のようにネストして
+しまうため、コピー先を先に作ってから**中身**をコピーする:
 
 ```bash
-cp -r docker/local/app-go "docker/local/app-$NAME"
+NAME=node-express   # 手順1と同じ値
+mkdir -p "docker/local/app-$NAME"
+cp -r docker/local/app-go/. "docker/local/app-$NAME/"
 ```
 
 書き換える点:
@@ -67,6 +72,7 @@ cp -r docker/local/app-go "docker/local/app-$NAME"
 `docker/bin/docker-go.sh` をコピーして書き換える。
 
 ```bash
+NAME=node-express   # 手順1と同じ値
 cp docker/bin/docker-go.sh "docker/bin/docker-$NAME.sh"
 chmod 755 "docker/bin/docker-$NAME.sh"
 ```
@@ -74,10 +80,13 @@ chmod 755 "docker/bin/docker-$NAME.sh"
 書き換える点: `cd` 先を `app-$NAME`、`-p showcase-$NAME`、`exec` で入る
 サービス名・シェル（bash推奨、必要ならsh）。
 
-さらに `docker/bin/docker-backends.sh` の `run()` に1行追加する:
+さらに `docker/bin/docker-backends.sh` の `run()` に1行追加する。
+この行は `docker-backends.sh` 自身のスクリプト内に書く固定のコードであり、
+その場では `NAME` 変数は存在しないため、`$NAME` ではなく**実際のバックエンド名を
+直接書く**（例: `node-express`）:
 
 ```bash
-bash "${SCRIPT_DIR}/docker-$NAME.sh" "${ARG}"
+    bash "${SCRIPT_DIR}/docker-node-express.sh" "${ARG}"
 ```
 
 ## 4. CIワークフロー（`.github/workflows/$NAME-ci.yml`）
@@ -85,10 +94,14 @@ bash "${SCRIPT_DIR}/docker-$NAME.sh" "${ARG}"
 `.github/workflows/go-gin-ci.yml` をコピーして書き換える。
 
 ```bash
+NAME=node-express   # 手順1と同じ値
 cp .github/workflows/go-gin-ci.yml ".github/workflows/$NAME-ci.yml"
 ```
 
 書き換える点:
+- ファイル先頭のコメント（`# Go（Gin）CI ワークフロー` / `# developブランチの
+  backends/go-gin/** 変更時に CI を実行`）と `name: Go（Gin）CI` を、追加する
+  言語・バックエンド名に合わせて書き換える（コピー直後はGo向けの文言が残っている）
 - `paths: - 'backends/$NAME/**'`
 - `branches-ignore: ['feature/issue-*']` と `concurrency.group:
   shared-authserver-tunnel` は変更しない（全バックエンド共有のngrok/LocalStack
@@ -126,6 +139,7 @@ cp .github/workflows/go-gin-ci.yml ".github/workflows/$NAME-ci.yml"
 
 ```bash
 set -euo pipefail
+NAME=node-express   # 手順1と同じ値
 
 files=(
   "docker/bin/docker-backends.sh"
@@ -153,6 +167,7 @@ echo "7ファイルすべてに登録を確認しました"
 （docker-ops Skill参照）。
 
 ```bash
+NAME=node-express   # 手順1と同じ値
 docker/bin/docker-common.sh up   # showcaseネットワーク・nginx-proxyが無ければ起動
 "docker/bin/docker-$NAME.sh" up
 "docker/bin/docker-$NAME.sh" exec   # コンテナに入り疎通確認

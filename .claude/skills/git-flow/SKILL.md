@@ -47,12 +47,14 @@ git checkout -b "feature/issue-$N"
   対応する場合（Issueの残タスクが残る場合）は `Closes #$N` ではなく `Refs #$N` とし、
   Issueを自動クローズさせない。
 
-- コマンド（`TYPE`/`SUMMARY`/`CHANGES`/`LINK` に実際の値を設定してから実行する。
-  heredocはクォートしない `<<EOF` にして変数展開させる。プレースホルダーのまま
-  送信しない）:
+- コマンド（`N`/`TYPE`/`SUMMARY`/`CHANGES`/`LINK` に実際の値を設定してから実行する。
+  この節のブロックは手順1とは別のシェルプロセスで実行される想定のため、`N`を
+  再設定する。heredocはクォートしない `<<EOF` にして変数展開させる。
+  プレースホルダーのまま送信しない）:
 
   ```bash
   set -euo pipefail
+  N=34                             # 手順1で使った値と同じIssue番号
   TYPE=feat                       # feat/fix/docs/chore/refactor 等
   SUMMARY="日本語要約"
   CHANGES="- 変更ファイル/内容"    # 複数行なら改行を含めて組み立てる
