@@ -19,16 +19,24 @@ allowed-tools: Bash(git:*), Bash(cp:*), Bash(mkdir:*)
   ブランチを作成しておく。
 - 以降のコマンド例は `NAME` 変数に実際のバックエンド名を入れて使う
   （`<name>` をそのままシェルに渡すと `<`/`>` がリダイレクトと解釈され
-  構文エラーになるため、必ず変数化する）。
+  構文エラーになるため、必ず変数化する）。`NAME` はディレクトリ名・Docker
+  Composeのプロジェクト名・CIワークフローファイル名にそのまま使われるため、
+  既存7バックエンド同様のkebab-case（`^[a-z0-9]+(-[a-z0-9]+)*$`）にする。
+  各ブロックの冒頭で検証している。
 - **各手順のbashブロックは別々のシェルプロセスとして実行される想定**で、
   `NAME` はブロック間で共有されない。そのため各ブロックの先頭で毎回
   `NAME=<実際の値>` を（同じ値で）設定し直す。同一シェルセッション内で
   複数手順を続けて実行する場合は、2回目以降の再設定は害にならない。
+- 手順2〜4のコピー操作は、コピー先が既に存在する場合は実行前に停止する
+  （再実行で既存の変更を`cp`が上書きするのを防ぐ）。既存の生成物を作り直したい
+  場合は、手動で削除するか意図的に上書きすることを確認した上で行う。
 
 ## 1. バックエンドソース（`backends/$NAME/`）
 
 ```bash
 NAME=node-express   # 実際に追加するバックエンド名に置き換える
+[[ "$NAME" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]] || { echo "invalid backend name: $NAME" >&2; exit 1; }
+
 mkdir -p "backends/$NAME"
 ```
 
@@ -44,6 +52,12 @@ mkdir -p "backends/$NAME"
 
 ```bash
 NAME=node-express   # 手順1と同じ値
+[[ "$NAME" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]] || { echo "invalid backend name: $NAME" >&2; exit 1; }
+
+if [ -e "docker/local/app-$NAME" ]; then
+  echo "docker/local/app-$NAME は既に存在します。上書きを避けるため中断します" >&2
+  exit 1
+fi
 mkdir -p "docker/local/app-$NAME"
 cp -r docker/local/app-go/. "docker/local/app-$NAME/"
 ```
@@ -73,6 +87,12 @@ cp -r docker/local/app-go/. "docker/local/app-$NAME/"
 
 ```bash
 NAME=node-express   # 手順1と同じ値
+[[ "$NAME" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]] || { echo "invalid backend name: $NAME" >&2; exit 1; }
+
+if [ -e "docker/bin/docker-$NAME.sh" ]; then
+  echo "docker/bin/docker-$NAME.sh は既に存在します。上書きを避けるため中断します" >&2
+  exit 1
+fi
 cp docker/bin/docker-go.sh "docker/bin/docker-$NAME.sh"
 chmod 755 "docker/bin/docker-$NAME.sh"
 ```
@@ -95,6 +115,12 @@ chmod 755 "docker/bin/docker-$NAME.sh"
 
 ```bash
 NAME=node-express   # 手順1と同じ値
+[[ "$NAME" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]] || { echo "invalid backend name: $NAME" >&2; exit 1; }
+
+if [ -e ".github/workflows/$NAME-ci.yml" ]; then
+  echo ".github/workflows/$NAME-ci.yml は既に存在します。上書きを避けるため中断します" >&2
+  exit 1
+fi
 cp .github/workflows/go-gin-ci.yml ".github/workflows/$NAME-ci.yml"
 ```
 
@@ -140,6 +166,7 @@ cp .github/workflows/go-gin-ci.yml ".github/workflows/$NAME-ci.yml"
 ```bash
 set -euo pipefail
 NAME=node-express   # 手順1と同じ値
+[[ "$NAME" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]] || { echo "invalid backend name: $NAME" >&2; exit 1; }
 
 files=(
   "docker/bin/docker-backends.sh"
@@ -168,6 +195,8 @@ echo "7ファイルすべてに登録を確認しました"
 
 ```bash
 NAME=node-express   # 手順1と同じ値
+[[ "$NAME" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]] || { echo "invalid backend name: $NAME" >&2; exit 1; }
+
 docker/bin/docker-common.sh up   # showcaseネットワーク・nginx-proxyが無ければ起動
 "docker/bin/docker-$NAME.sh" up
 "docker/bin/docker-$NAME.sh" exec   # コンテナに入り疎通確認
