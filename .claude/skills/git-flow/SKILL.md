@@ -137,9 +137,14 @@ set -euo pipefail
 N=34   # このfeatureブランチのIssue番号
 PR=$(gh pr view "feature/issue-$N" --repo bobtabo/authorization-showcase --json number -q .number)
 
-ALL=$(gh api "repos/bobtabo/authorization-showcase/pulls/$PR/comments" --paginate)
-TOP_IDS=$(echo "$ALL" | jq -r '.[] | select(.user.login=="coderabbitai[bot]" and .in_reply_to_id==null) | .id')
-REPLIED_IDS=$(echo "$ALL" | jq -r '.[] | select(.in_reply_to_id != null and .user.login!="coderabbitai[bot]") | .in_reply_to_id')
+COMMENTS_URL="repos/bobtabo/authorization-showcase/pulls/$PR/comments"
+TOP_IDS=$(gh api "$COMMENTS_URL" --paginate \
+  --jq '.[] | select(.user.login=="coderabbitai[bot]" and .in_reply_to_id==null) | .id')
+REPLIED_IDS=$(gh api "$COMMENTS_URL" --paginate \
+  --jq '.[] | select(.in_reply_to_id != null and .user.login!="coderabbitai[bot]") | .in_reply_to_id')
+# gh api の --jq でAPI応答を直接フィルタする（応答をシェル変数に保持してから
+# echo | jq に通すと、本文中のエスケープシーケンスがechoで壊れてjqがパース
+# エラーになることがあるため避ける）
 
 comm -23 <(echo "$TOP_IDS" | sort) <(echo "$REPLIED_IDS" | sort -u)
 # 出力された各IDについて本文を確認する:
