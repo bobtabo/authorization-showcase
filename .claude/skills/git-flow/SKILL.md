@@ -89,14 +89,20 @@ PRを作成したら、CIとCodeRabbitレビューが収束するまで監視す
 ### 3.1 CI待ち
 
 `backends/**` を変更している場合、`feature/issue-*` へのpushではバックエンドCIが
-自動実行されない（`branches-ignore`で除外されるため）。該当ワークフローは
-backend-ci-trigger Skillで`workflow_dispatch`により手動発火してから待つ
-（バックエンド変更が無ければ不要。CodeRabbitのチェックはpush毎に自動で走る）。
+自動実行されない（`branches-ignore`で除外されるため）。対応ワークフローが既に
+defaultブランチ（`main`）に存在するなら、backend-ci-trigger Skillで
+`workflow_dispatch`により手動発火してから待つ。new-backend-scaffold Skillで
+**新規追加した**ワークフロー（まだ`main`に無い）は`workflow_dispatch`で発火できない
+ため、この場合は無理に発火しようとせず「CI未実行（develop→main同期後に確認）」と
+明示してユーザーに報告する（バックエンド変更が無ければこの節は不要。CodeRabbitの
+チェックはpush毎に自動で走る）。
 
 固定の `sleep` ループでフォアグラウンドをブロックしない。Bashツールの
 `run_in_background: true` でポーリングし、完了通知を待つ。全チェックの状態を
-集約し、1件でも `FAILURE` なら停止、API取得失敗・タイムアウトも明示的に失敗として
-扱う（先頭のチェックだけを見ない）:
+集約し、`FAILURE`/`ERROR`（GitHubのStatusState仕様上の終端失敗状態）が1件でもあれば
+即停止、API取得失敗・タイムアウトも明示的に失敗として扱う（先頭のチェックだけを
+見ない。応答をシェル変数に保持してからechoでjqへ渡すと本文中のエスケープシーケンスで
+壊れることがあるため、`gh`の`--jq`で直接フィルタする）:
 
 ```bash
 set -euo pipefail
@@ -104,12 +110,12 @@ N=34   # このfeatureブランチのIssue番号
 PR=$(gh pr view "feature/issue-$N" --repo bobtabo/authorization-showcase --json number -q .number)
 
 for i in $(seq 1 40); do
-  JSON=$(gh pr view "$PR" --repo bobtabo/authorization-showcase --json statusCheckRollup) || {
+  STATES=$(gh pr view "$PR" --repo bobtabo/authorization-showcase \
+    --json statusCheckRollup --jq '.statusCheckRollup[].state') || {
     echo "gh pr view の取得に失敗しました" >&2
     exit 1
   }
-  STATES=$(echo "$JSON" | jq -r '.statusCheckRollup[].state')
-  if echo "$STATES" | grep -q '^FAILURE$'; then
+  if echo "$STATES" | grep -qE '^(FAILURE|ERROR)$'; then
     echo "CIが失敗しました" >&2
     exit 1
   fi
