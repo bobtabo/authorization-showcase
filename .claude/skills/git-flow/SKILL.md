@@ -78,6 +78,77 @@ git checkout -b "feature/issue-$N"
   )"
   ```
 
+## 3. レビュー監視・対応（CI/CodeRabbit）
+
+PRを作成したら、CIとCodeRabbitレビューが収束するまで監視する。人間レビュアーの
+承認を待つ／催促するのはこのSkillの対象外（そこはユーザーに判断を委ねる）。
+
+### 3.1 CI待ち
+
+固定の `sleep` ループでフォアグラウンドをブロックしない。Bashツールの
+`run_in_background: true` でポーリングし、完了通知を待つ:
+
+```bash
+PR=35   # gh pr create の出力から取得したPR番号
+
+for i in $(seq 1 40); do
+  STATE=$(gh pr view "$PR" --repo bobtabo/authorization-showcase \
+    --json statusCheckRollup -q '.statusCheckRollup[0].state' 2>/dev/null)
+  echo "[$i] state=$STATE"
+  if [ "$STATE" = "SUCCESS" ] || [ "$STATE" = "FAILURE" ]; then
+    break
+  fi
+  sleep 15
+done
+```
+
+### 3.2 CodeRabbitの指摘への対応
+
+```bash
+PR=35   # 対象PR番号
+
+gh api "repos/bobtabo/authorization-showcase/pulls/$PR/comments" --paginate \
+  --jq '.[] | select(.in_reply_to_id == null) | {id, path, line}'
+```
+
+未返信（`in_reply_to_id == null` で自分がまだ返信していない）の指摘ごとに:
+
+1. 指摘内容を現在のコードと照らして検証する。既に対応済み／的外れ／このリポジトリの
+   既知のスコープ外事項（Issue本文に明記済み等）なら、修正はせず理由を添えて返信する。
+2. 妥当な指摘は修正してコミット・プッシュする。
+3. 各コメントIDに返信する:
+
+```bash
+PR=35
+COMMENT_ID=1234567   # 対応表または上記jqの出力から取得
+
+gh api "repos/bobtabo/authorization-showcase/pulls/$PR/comments/$COMMENT_ID/replies" \
+  -f body="対応しました（<commit-sha>）。<何をどう直したか>"
+```
+
+### 3.3 再レビューのトリガーと収束判定
+
+CodeRabbitは短時間に複数コミットが積まれると "reviews paused"（自動一時停止）になり、
+push しただけでは新しいレビューが走らないことがある。その場合は明示的に再トリガーする:
+
+```bash
+PR=35
+gh pr comment "$PR" --repo bobtabo/authorization-showcase --body "@coderabbitai review"
+```
+
+再トリガー後、3.1と同様にポーリングし、top-levelコメント数
+（`in_reply_to_id == null` の件数）が増えていないか確認する。増えていれば3.2に戻る。
+
+収束（完了）の判定基準は次の**両方**を満たすこと:
+- 新しいラウンドで actionable comment が0件（top-levelコメント数が増えない）
+- `gh pr view "$PR" --json mergeable,mergeStateStatus` が `MERGEABLE` / `CLEAN`
+
+目安として5ラウンド前後で収束しない場合は、無限にループさせず一旦打ち切り、
+未解決点を添えてユーザーに報告し、続行するかどうかの判断を仰ぐ。
+
+収束したら最終状態（CI結果・対応した指摘の要約・PRリンク）をユーザーに報告する。
+**developへのマージはこのSkillでは行わない**（ユーザーの明示的な指示を待つ）。
+
 ## 禁止事項
 
 - `develop` / `main` への直接push（featureブランチ経由のPRを必ず通す）
