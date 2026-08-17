@@ -82,21 +82,45 @@ git checkout -b "feature/issue-$N"
 
 PRを作成したら、CIとCodeRabbitレビューが収束するまで監視する。人間レビュアーの
 承認を待つ／催促するのはこのSkillの対象外（そこはユーザーに判断を委ねる）。
+以下の各bashブロックは自己完結させてあるが、`PR`はハードコードせず毎回
+`feature/issue-$N` から解決する（PR番号を決め打ちすると、別のPRを誤って操作する
+事故につながる）。
 
 ### 3.1 CI待ち
 
+`backends/**` を変更している場合、`feature/issue-*` へのpushではバックエンドCIが
+自動実行されない（`branches-ignore`で除外されるため）。該当ワークフローは
+backend-ci-trigger Skillで`workflow_dispatch`により手動発火してから待つ
+（バックエンド変更が無ければ不要。CodeRabbitのチェックはpush毎に自動で走る）。
+
 固定の `sleep` ループでフォアグラウンドをブロックしない。Bashツールの
-`run_in_background: true` でポーリングし、完了通知を待つ:
+`run_in_background: true` でポーリングし、完了通知を待つ。全チェックの状態を
+集約し、1件でも `FAILURE` なら停止、API取得失敗・タイムアウトも明示的に失敗として
+扱う（先頭のチェックだけを見ない）:
 
 ```bash
-PR=35   # gh pr create の出力から取得したPR番号
+set -euo pipefail
+N=34   # このfeatureブランチのIssue番号
+PR=$(gh pr view "feature/issue-$N" --repo bobtabo/authorization-showcase --json number -q .number)
 
 for i in $(seq 1 40); do
-  STATE=$(gh pr view "$PR" --repo bobtabo/authorization-showcase \
-    --json statusCheckRollup -q '.statusCheckRollup[0].state' 2>/dev/null)
-  echo "[$i] state=$STATE"
-  if [ "$STATE" = "SUCCESS" ] || [ "$STATE" = "FAILURE" ]; then
+  JSON=$(gh pr view "$PR" --repo bobtabo/authorization-showcase --json statusCheckRollup) || {
+    echo "gh pr view の取得に失敗しました" >&2
+    exit 1
+  }
+  STATES=$(echo "$JSON" | jq -r '.statusCheckRollup[].state')
+  if echo "$STATES" | grep -q '^FAILURE$'; then
+    echo "CIが失敗しました" >&2
+    exit 1
+  fi
+  if [ -n "$STATES" ] && ! echo "$STATES" | grep -qv '^SUCCESS$'; then
+    echo "全チェックSUCCESS"
     break
+  fi
+  echo "[$i] pending: $STATES"
+  if [ "$i" -eq 40 ]; then
+    echo "タイムアウト: CIが完了しませんでした" >&2
+    exit 1
   fi
   sleep 15
 done
@@ -104,26 +128,43 @@ done
 
 ### 3.2 CodeRabbitの指摘への対応
 
-```bash
-PR=35   # 対象PR番号
+「未返信」とは、CodeRabbit（`coderabbitai[bot]`）のtop-levelコメントのうち、
+`coderabbitai[bot]` 以外からの返信が付いていないものを指す（top-levelコメント数を
+そのまま見ると、既に返信済みのものも数えてしまい判定を誤る）:
 
-gh api "repos/bobtabo/authorization-showcase/pulls/$PR/comments" --paginate \
-  --jq '.[] | select(.in_reply_to_id == null) | {id, path, line}'
+```bash
+set -euo pipefail
+N=34   # このfeatureブランチのIssue番号
+PR=$(gh pr view "feature/issue-$N" --repo bobtabo/authorization-showcase --json number -q .number)
+
+ALL=$(gh api "repos/bobtabo/authorization-showcase/pulls/$PR/comments" --paginate)
+TOP_IDS=$(echo "$ALL" | jq -r '.[] | select(.user.login=="coderabbitai[bot]" and .in_reply_to_id==null) | .id')
+REPLIED_IDS=$(echo "$ALL" | jq -r '.[] | select(.in_reply_to_id != null and .user.login!="coderabbitai[bot]") | .in_reply_to_id')
+
+comm -23 <(echo "$TOP_IDS" | sort) <(echo "$REPLIED_IDS" | sort -u)
+# 出力された各IDについて本文を確認する:
+#   gh api repos/bobtabo/authorization-showcase/pulls/comments/<id> --jq '.path, .line, .body'
 ```
 
-未返信（`in_reply_to_id == null` で自分がまだ返信していない）の指摘ごとに:
+未返信の指摘ごとに:
 
 1. 指摘内容を現在のコードと照らして検証する。既に対応済み／的外れ／このリポジトリの
    既知のスコープ外事項（Issue本文に明記済み等）なら、修正はせず理由を添えて返信する。
 2. 妥当な指摘は修正してコミット・プッシュする。
-3. 各コメントIDに返信する:
+3. 各コメントIDに返信する（本文はプレースホルダーのまま送信せず、実際のコミットSHAと
+   修正内容を変数に入れてから渡す）:
 
 ```bash
-PR=35
-COMMENT_ID=1234567   # 対応表または上記jqの出力から取得
+set -euo pipefail
+N=34   # このfeatureブランチのIssue番号
+PR=$(gh pr view "feature/issue-$N" --repo bobtabo/authorization-showcase --json number -q .number)
+COMMENT_ID=1234567                       # 3.2で洗い出した未返信コメントのID
+COMMIT_SHA=$(git rev-parse --short HEAD)
+FIX_SUMMARY="何をどう直したかを記述する"
+REPLY_BODY="対応しました（${COMMIT_SHA}）。${FIX_SUMMARY}"
 
 gh api "repos/bobtabo/authorization-showcase/pulls/$PR/comments/$COMMENT_ID/replies" \
-  -f body="対応しました（<commit-sha>）。<何をどう直したか>"
+  -f body="$REPLY_BODY"
 ```
 
 ### 3.3 再レビューのトリガーと収束判定
@@ -132,16 +173,18 @@ CodeRabbitは短時間に複数コミットが積まれると "reviews paused"�
 push しただけでは新しいレビューが走らないことがある。その場合は明示的に再トリガーする:
 
 ```bash
-PR=35
+set -euo pipefail
+N=34   # このfeatureブランチのIssue番号
+PR=$(gh pr view "feature/issue-$N" --repo bobtabo/authorization-showcase --json number -q .number)
 gh pr comment "$PR" --repo bobtabo/authorization-showcase --body "@coderabbitai review"
 ```
 
-再トリガー後、3.1と同様にポーリングし、top-levelコメント数
-（`in_reply_to_id == null` の件数）が増えていないか確認する。増えていれば3.2に戻る。
+再トリガー後、3.1のCI待ちと3.2の未返信コメント抽出を繰り返す。
 
 収束（完了）の判定基準は次の**両方**を満たすこと:
-- 新しいラウンドで actionable comment が0件（top-levelコメント数が増えない）
-- `gh pr view "$PR" --json mergeable,mergeStateStatus` が `MERGEABLE` / `CLEAN`
+- 3.2の未返信コメント抽出結果が0件
+- `gh pr view "$PR" --repo bobtabo/authorization-showcase --json mergeable,mergeStateStatus`
+  が `mergeable: MERGEABLE` / `mergeStateStatus: CLEAN`
 
 目安として5ラウンド前後で収束しない場合は、無限にループさせず一旦打ち切り、
 未解決点を添えてユーザーに報告し、続行するかどうかの判断を仰ぐ。
