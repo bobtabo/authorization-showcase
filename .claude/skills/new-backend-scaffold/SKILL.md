@@ -37,6 +37,10 @@ allowed-tools: Bash(git:*), Bash(cp:*), Bash(mkdir:*)
 NAME=node-express   # 実際に追加するバックエンド名に置き換える
 [[ "$NAME" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]] || { echo "invalid backend name: $NAME" >&2; exit 1; }
 
+if [ -e "backends/$NAME" ]; then
+  echo "backends/$NAME は既に存在します。上書きを避けるため中断します" >&2
+  exit 1
+fi
 mkdir -p "backends/$NAME"
 ```
 
