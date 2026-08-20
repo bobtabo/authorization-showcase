@@ -52,7 +52,12 @@ mkdir -p "backends/$NAME"
 
 `docker/local/app-go/` の中身を丸ごとコピーして書き換える。ディレクトリ自体を
 `cp -r src dst` すると、`dst` が既に存在する場合は `dst/app-go/` のようにネストして
-しまうため、コピー先を先に作ってから**中身**をコピーする:
+しまうため、コピー先を先に作ってから**中身**をコピーする。ただし `docker/local/app-go/.env`
+（`.gitignore`対象。ホストでのローカル起動により生成された実際の認証情報・
+コンテナ名・ポート等を含みうる）と `docker/local/app-go/logs/`（実行時ログ）は
+新バックエンド用の雛形に含めるべきではないため除外する（`.env`は docker-ops Skillの
+通り、後で `docker/bin/docker-$NAME.sh up` を実行した際に `.env.example` から
+自動生成されるため、ここで手動生成する必要はない）:
 
 ```bash
 NAME=node-express   # 手順1と同じ値
@@ -63,7 +68,8 @@ if [ -e "docker/local/app-$NAME" ]; then
   exit 1
 fi
 mkdir -p "docker/local/app-$NAME"
-cp -r docker/local/app-go/. "docker/local/app-$NAME/"
+rsync -a --exclude='.env' --exclude='logs/' docker/local/app-go/ "docker/local/app-$NAME/"
+mkdir -p "docker/local/app-$NAME/logs"
 ```
 
 書き換える点:

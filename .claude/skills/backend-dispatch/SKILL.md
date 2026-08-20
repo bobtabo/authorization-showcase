@@ -45,14 +45,17 @@ allowed-tools: Bash(docker:*), Bash(git:*)
   ```
   非対話的に1コマンドだけ実行したい場合は、対応する `docker/local/app-<x>/docker-compose.yml`
   を直接指定する（`docker exec <コンテナ名>` のようにコンテナ名を直書きしない。
-  プロジェクト名・サービス名がバックエンドごとに異なるため取り違えやすい）:
+  プロジェクト名・サービス名がバックエンドごとに異なるため取り違えやすい）。
+  `CMD` は文字列ではなく配列にし、`"${CMD[@]}"` で展開する（文字列のまま
+  `$CMD` と書くと、引数中のクォートや `*` がホスト側のシェルで単語分割・
+  パス展開されてしまい、意図しない引数がコンテナに渡る）:
   ```bash
   X=go            # 対応表の値に置き換える
   SERVICE=go      # execで指定するサービス名: go=go, java=java, php系=php, python=python, ruby=rb-rails
-  CMD="go test ./..."   # 実行したいコマンド
+  CMD=(go test ./...)   # 実行したいコマンド（配列で書く）
 
   docker compose -p "showcase-$X" -f "docker/local/app-$X/docker-compose.yml" \
-    exec -T --user 1000 "$SERVICE" $CMD
+    exec -T --user 1000 "$SERVICE" "${CMD[@]}"
   ```
   `-T` は必須（付けないとTTY割り当てを試みて、非対話環境では失敗しうる）。
 - コンテナが起動していない場合の対処は docker-ops Skillを参照。

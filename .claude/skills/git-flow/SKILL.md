@@ -94,8 +94,8 @@ defaultブランチ（`main`）に存在するなら、backend-ci-trigger Skill�
 `workflow_dispatch`により手動発火してから待つ。new-backend-scaffold Skillで
 **新規追加した**ワークフロー（まだ`main`に無い）は`workflow_dispatch`で発火できない
 ため、この場合は無理に発火しようとせず「CI未実行（develop→main同期後に確認）」と
-明示してユーザーに報告する（バックエンド変更が無ければこの節は不要。CodeRabbitの
-チェックはpush毎に自動で走る）。
+明示してユーザーに報告する（バックエンド変更が無ければCI待ちは不要。CodeRabbit
+レビューは自動起動を前提とせず、3.2/3.3の未返信コメント確認と再トリガー手順に従う）。
 
 固定の `sleep` ループでフォアグラウンドをブロックしない。Bashツールの
 `run_in_background: true` でポーリングし、完了通知を待つ。全チェックの状態を

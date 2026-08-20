@@ -62,21 +62,36 @@ git diff --name-only "$BASE"...
 
 ## 手動発火と結果確認
 
+`gh run list --limit 1` は既存の（今回発火した run とは別の）直近 run を拾って
+しまう可能性があるため、発火前の時刻を記録しておき、それより後に作られた
+`workflow_dispatch` イベントの run だけを新しい run として待つ:
+
 ```bash
+set -euo pipefail
 WORKFLOW=go-gin-ci.yml   # 対象ワークフローファイル名（上表を参照して置き換える）
 N=34                      # このfeatureブランチに対応するIssue番号に置き換える
 
+DISPATCHED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 gh workflow run "$WORKFLOW" --repo bobtabo/authorization-showcase --ref "feature/issue-$N"
 
-# 実行中/直近のrunを確認
-gh run list --repo bobtabo/authorization-showcase \
-  --workflow="$WORKFLOW" --branch="feature/issue-$N" --limit 1
+# 新しいrunが現れるまでポーリングする（発火直後はまだ一覧に出ないことがある）
+RUN_ID=""
+for i in $(seq 1 20); do
+  RUN_ID=$(gh run list --repo bobtabo/authorization-showcase \
+    --workflow="$WORKFLOW" --branch="feature/issue-$N" --event=workflow_dispatch \
+    --json databaseId,createdAt \
+    --jq "[.[] | select(.createdAt > \"$DISPATCHED_AT\")] | sort_by(.createdAt) | .[0].databaseId // empty")
+  [ -n "$RUN_ID" ] && break
+  sleep 3
+done
+if [ -z "$RUN_ID" ]; then
+  echo "新しいrunを検出できませんでした" >&2
+  exit 1
+fi
 
-# 完了まで待ってログを見る（run idを直近実行結果から取得する）
-RUN_ID=$(gh run list --repo bobtabo/authorization-showcase \
-  --workflow="$WORKFLOW" --branch="feature/issue-$N" --limit 1 \
-  --json databaseId -q '.[0].databaseId')
-gh run watch --repo bobtabo/authorization-showcase "$RUN_ID"
+# 完了まで待ってログを見る。--exit-status でCI失敗をこのコマンド自体の
+# 終了ステータスにも反映する
+gh run watch --repo bobtabo/authorization-showcase "$RUN_ID" --exit-status
 gh run view --repo bobtabo/authorization-showcase "$RUN_ID" --log
 ```
 
