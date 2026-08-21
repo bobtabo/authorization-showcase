@@ -62,9 +62,12 @@ git diff --name-only "$BASE"...
 
 ## 手動発火と結果確認
 
-`gh run list --limit 1` は既存の（今回発火した run とは別の）直近 run を拾って
-しまう可能性があるため、発火前の時刻を記録しておき、それより後に作られた
-`workflow_dispatch` イベントの run だけを新しい run として待つ:
+`gh workflow run` は対象runのURLを返せる場合は返す（`gh`のバージョンやイベント
+種別により返らないこともある）。まずそのURLからrun IDを取得することを優先し、
+取れなかった場合のみ `gh run list` へフォールバックする。フォールバック時は
+「発火前の時刻より後に作られた `workflow_dispatch` runが複数ある」と一意に
+特定できないため、候補が**ちょうど1件**のときだけ採用し、0件または複数件なら
+中断する（同時刻の並行dispatchと取り違えないため）:
 
 ```bash
 set -euo pipefail
@@ -72,27 +75,43 @@ WORKFLOW=go-gin-ci.yml   # 対象ワークフローファイル名（上表を�
 N=34                      # このfeatureブランチに対応するIssue番号に置き換える
 
 DISPATCHED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-gh workflow run "$WORKFLOW" --repo bobtabo/authorization-showcase --ref "feature/issue-$N"
+DISPATCH_OUTPUT=$(gh workflow run "$WORKFLOW" --repo bobtabo/authorization-showcase \
+  --ref "feature/issue-$N" 2>&1)
+echo "$DISPATCH_OUTPUT"
 
-# 新しいrunが現れるまでポーリングする（発火直後はまだ一覧に出ないことがある）
-RUN_ID=""
-for i in $(seq 1 20); do
-  RUN_ID=$(gh run list --repo bobtabo/authorization-showcase \
-    --workflow="$WORKFLOW" --branch="feature/issue-$N" --event=workflow_dispatch \
-    --json databaseId,createdAt \
-    --jq "[.[] | select(.createdAt > \"$DISPATCHED_AT\")] | sort_by(.createdAt) | .[0].databaseId // empty")
-  [ -n "$RUN_ID" ] && break
-  sleep 3
-done
+RUN_ID=$(echo "$DISPATCH_OUTPUT" | grep -oE '/actions/runs/[0-9]+' | grep -oE '[0-9]+' | head -1 || true)
+
+if [ -z "$RUN_ID" ]; then
+  # URLが返らない場合のフォールバック。候補が複数/0件の場合は一意に特定できないため中断する
+  for i in $(seq 1 20); do
+    CANDIDATES=$(gh run list --repo bobtabo/authorization-showcase \
+      --workflow="$WORKFLOW" --branch="feature/issue-$N" --event=workflow_dispatch \
+      --json databaseId,createdAt \
+      --jq "[.[] | select(.createdAt > \"$DISPATCHED_AT\")]")
+    COUNT=$(echo "$CANDIDATES" | jq 'length')
+    if [ "$COUNT" -eq 1 ]; then
+      RUN_ID=$(echo "$CANDIDATES" | jq -r '.[0].databaseId')
+      break
+    elif [ "$COUNT" -gt 1 ]; then
+      echo "runの候補が複数あり一意に特定できません。手動でrun IDを確認してください" >&2
+      exit 1
+    fi
+    sleep 3
+  done
+fi
 if [ -z "$RUN_ID" ]; then
   echo "新しいrunを検出できませんでした" >&2
   exit 1
 fi
 
-# 完了まで待ってログを見る。--exit-status でCI失敗をこのコマンド自体の
-# 終了ステータスにも反映する
+# 完了まで待ってログを見る。--exit-status はCI失敗時に非0で終了するため、
+# set -e 下でもgh run view --logが実行されるようステータスを一旦保存する
+set +e
 gh run watch --repo bobtabo/authorization-showcase "$RUN_ID" --exit-status
+WATCH_STATUS=$?
+set -e
 gh run view --repo bobtabo/authorization-showcase "$RUN_ID" --log
+exit "$WATCH_STATUS"
 ```
 
 ## 注意
