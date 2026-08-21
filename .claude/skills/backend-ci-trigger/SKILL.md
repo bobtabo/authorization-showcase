@@ -76,7 +76,7 @@ N=34                      # このfeatureブランチに対応するIssue番号�
 
 EXISTING_IDS=$(gh run list --repo bobtabo/authorization-showcase \
   --workflow="$WORKFLOW" --branch="feature/issue-$N" --event=workflow_dispatch \
-  --json databaseId --jq '.[].databaseId' | sort -u)
+  --limit 100 --json databaseId --jq '.[].databaseId' | sort -u)
 
 DISPATCH_OUTPUT=$(gh workflow run "$WORKFLOW" --repo bobtabo/authorization-showcase \
   --ref "feature/issue-$N" 2>&1)
@@ -89,7 +89,7 @@ if [ -z "$RUN_ID" ]; then
   for i in $(seq 1 20); do
     CURRENT_IDS=$(gh run list --repo bobtabo/authorization-showcase \
       --workflow="$WORKFLOW" --branch="feature/issue-$N" --event=workflow_dispatch \
-      --json databaseId --jq '.[].databaseId' | sort -u)
+      --limit 100 --json databaseId --jq '.[].databaseId' | sort -u)
     NEW_IDS=$(comm -13 <(echo "$EXISTING_IDS") <(echo "$CURRENT_IDS"))
     COUNT=$(echo "$NEW_IDS" | grep -c . || true)
     if [ "$COUNT" -eq 1 ]; then
