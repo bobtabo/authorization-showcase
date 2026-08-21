@@ -9,6 +9,7 @@ docker/local/.env
 .claude/*
 !.claude/settings.json
 !.claude/hooks/
+!.claude/skills/
 .claude/settings.local.json
 /backends/go-gin/tmp/
 /backends/java-springboot/.gradle/
