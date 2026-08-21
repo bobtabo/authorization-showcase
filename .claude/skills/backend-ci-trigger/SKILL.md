@@ -63,18 +63,21 @@ git diff --name-only "$BASE"...
 ## 手動発火と結果確認
 
 `gh workflow run` は対象runのURLを返せる場合は返す（`gh`のバージョンやイベント
-種別により返らないこともある）。まずそのURLからrun IDを取得することを優先し、
-取れなかった場合のみ `gh run list` へフォールバックする。フォールバック時は
-「発火前の時刻より後に作られた `workflow_dispatch` runが複数ある」と一意に
-特定できないため、候補が**ちょうど1件**のときだけ採用し、0件または複数件なら
-中断する（同時刻の並行dispatchと取り違えないため）:
+種別により返らないこともある）。まずそのURLからrun IDを取得することを優先する。
+取れなかった場合は `gh run list` へフォールバックするが、`createdAt` は秒精度
+しかなく発火と同じ秒に既存runが作られていると誤って一致しうるため、時刻ではなく
+**発火前に存在したrunのdatabaseId集合を記録し、そこに含まれない新しいID**を
+候補とする。候補が複数見つかった場合は一意に特定できないため中断する:
 
 ```bash
 set -euo pipefail
 WORKFLOW=go-gin-ci.yml   # 対象ワークフローファイル名（上表を参照して置き換える）
 N=34                      # このfeatureブランチに対応するIssue番号に置き換える
 
-DISPATCHED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+EXISTING_IDS=$(gh run list --repo bobtabo/authorization-showcase \
+  --workflow="$WORKFLOW" --branch="feature/issue-$N" --event=workflow_dispatch \
+  --json databaseId --jq '.[].databaseId' | sort -u)
+
 DISPATCH_OUTPUT=$(gh workflow run "$WORKFLOW" --repo bobtabo/authorization-showcase \
   --ref "feature/issue-$N" 2>&1)
 echo "$DISPATCH_OUTPUT"
@@ -82,15 +85,15 @@ echo "$DISPATCH_OUTPUT"
 RUN_ID=$(echo "$DISPATCH_OUTPUT" | grep -oE '/actions/runs/[0-9]+' | grep -oE '[0-9]+' | head -1 || true)
 
 if [ -z "$RUN_ID" ]; then
-  # URLが返らない場合のフォールバック。候補が複数/0件の場合は一意に特定できないため中断する
+  # URLが返らない場合のフォールバック。発火前に存在しなかったIDだけを候補とする
   for i in $(seq 1 20); do
-    CANDIDATES=$(gh run list --repo bobtabo/authorization-showcase \
+    CURRENT_IDS=$(gh run list --repo bobtabo/authorization-showcase \
       --workflow="$WORKFLOW" --branch="feature/issue-$N" --event=workflow_dispatch \
-      --json databaseId,createdAt \
-      --jq "[.[] | select(.createdAt > \"$DISPATCHED_AT\")]")
-    COUNT=$(echo "$CANDIDATES" | jq 'length')
+      --json databaseId --jq '.[].databaseId' | sort -u)
+    NEW_IDS=$(comm -13 <(echo "$EXISTING_IDS") <(echo "$CURRENT_IDS"))
+    COUNT=$(echo "$NEW_IDS" | grep -c . || true)
     if [ "$COUNT" -eq 1 ]; then
-      RUN_ID=$(echo "$CANDIDATES" | jq -r '.[0].databaseId')
+      RUN_ID="$NEW_IDS"
       break
     elif [ "$COUNT" -gt 1 ]; then
       echo "runの候補が複数あり一意に特定できません。手動でrun IDを確認してください" >&2
@@ -104,13 +107,18 @@ if [ -z "$RUN_ID" ]; then
   exit 1
 fi
 
-# 完了まで待ってログを見る。--exit-status はCI失敗時に非0で終了するため、
-# set -e 下でもgh run view --logが実行されるようステータスを一旦保存する
+# 完了まで待つ。--exit-status はCI失敗時に非0で終了するため、set -e 下でも
+# 後続のログ取得が実行されるようステータスを一旦保存する
 set +e
 gh run watch --repo bobtabo/authorization-showcase "$RUN_ID" --exit-status
 WATCH_STATUS=$?
 set -e
-gh run view --repo bobtabo/authorization-showcase "$RUN_ID" --log
+
+# ログ取得自体の失敗（gh CLIの既知の不具合等）でこのステータスが失われないよう、
+# 失敗しても警告のみ出して握りつぶす
+if ! gh run view --repo bobtabo/authorization-showcase "$RUN_ID" --log; then
+  echo "警告: ログの取得に失敗しました（run自体の結果には影響しません）" >&2
+fi
 exit "$WATCH_STATUS"
 ```
 
